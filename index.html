@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>世界宗教地图 · World Religion Atlas</title>
+<meta name="description" content="可缩放的世界宗教分布地图，支持平面与 3D 地球，点击国家查看宗教构成与历史，并附道教全球分布专题。">
+<meta name="theme-color" content="#0B0F14">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./assets/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
+<link rel="stylesheet" href="./assets/css/style.css">
+<script>if(/[?&](skipintro|nostart)/.test(location.search)){document.documentElement.className+=" skip-intro";}</script>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <header class="topbar">
+    <button class="icon-btn only-mobile" id="drawerBtn" aria-label="打开图例">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+
+    <a class="brand" href="#" id="brandHome">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".55"/>
+          <path d="M24 3a21 21 0 0 1 0 42 10.5 10.5 0 0 0 0-21 10.5 10.5 0 0 1 0-21Z" fill="currentColor" opacity=".92"/>
+          <circle cx="24" cy="13.5" r="3" fill="#0B0F14"/>
+          <circle cx="24" cy="34.5" r="3" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>世界宗教地图</strong>
+        <small>WORLD RELIGION ATLAS</small>
+      </span>
+    </a>
+
+    <div class="search" id="search">
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+      <input id="searchInput" type="search" placeholder="搜索国家 / 地区…" autocomplete="off" spellcheck="false" aria-label="搜索国家或地区">
+      <div class="search-results" id="searchResults" hidden></div>
+    </div>
+
+    <nav class="segmented" id="viewSwitch" aria-label="地图视图">
+      <button class="seg-btn is-active" data-view="flat" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20V6.5Z"/><path d="M9 4v13.5M15 6.5V20"/></svg>
+        <span>平面</span>
+      </button>
+      <button class="seg-btn" data-view="globe" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/></svg>
+        <span>3D 地球</span>
+      </button>
+    </nav>
+
+    <button class="tao-btn" id="taoismBtn" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 1 0 18 4.5 4.5 0 0 1 0-9 4.5 4.5 0 0 0 0-9Z"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="12" cy="16.5" r="1.2"/></svg>
+      <span>道教分布</span>
+    </button>
+
+    <button class="icon-btn only-mobile" id="infoBtnMobile" aria-label="数据说明">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
+    </button>
+  </header>
+
+  <main class="workspace" id="workspace">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <h2>图例</h2>
+        <button class="icon-btn only-mobile" id="drawerClose" aria-label="关闭图例">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <p class="sidebar-note">颜色代表该地最主要的宗教。<br>点击图例可在地图上突出显示。</p>
+
+      <div class="legend" id="legend"></div>
+
+      <div class="sidebar-block">
+        <div class="block-title">
+          <span>图层</span>
+          <span class="block-hint">LAYERS</span>
+        </div>
+        <button class="layer-card" id="layerDominant" type="button">
+          <span class="layer-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 9l9 6 9-6-9-6Z"/><path d="m3 15 9 6 9-6"/></svg>
+          </span>
+          <span class="layer-copy"><strong>主导宗教</strong><small>按信众比例着色</small></span>
+          <span class="layer-check">✓</span>
+        </button>
+        <button class="layer-card" id="layerTaoism" type="button">
+          <span class="layer-icon tao">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 1 0 18 4.5 4.5 0 0 1 0-9 4.5 4.5 0 0 0 0-9Z"/><circle cx="12" cy="7.5" r="1.1"/><circle cx="12" cy="16.5" r="1.1"/></svg>
+          </span>
+          <span class="layer-copy"><strong>道教信众</strong><small>全球道教分布热度</small></span>
+          <span class="layer-check">✓</span>
+        </button>
+      </div>
+
+      <div class="sidebar-block" id="regionBlock">
+        <div class="block-title">
+          <span>宗教热点地区</span>
+          <span class="block-hint">放大后可见</span>
+        </div>
+        <ul class="region-list" id="regionList"></ul>
+      </div>
+
+      <div class="sidebar-foot">
+        <button class="text-btn" id="aboutBtn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
+          数据说明与来源
+        </button>
+        <p>拖动平移 · 滚轮 / 双指缩放</p>
+      </div>
+    </aside>
+
+    <div class="drawer-scrim" id="drawerScrim"></div>
+
+    <section class="stage" id="stage">
+      <div class="atmosphere"></div>
+      <canvas id="map" aria-label="世界宗教地图"></canvas>
+
+      <div class="stage-top">
+        <div class="zoom-readout" id="zoomReadout">1.0×</div>
+        <div class="stage-hint" id="stageHint">拖动平移 · 滚轮或双指缩放 · 点击国家查看详情</div>
+      </div>
+
+      <div class="map-tools">
+        <button class="tool-btn" id="zoomIn" type="button" aria-label="放大">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="tool-btn" id="zoomOut" type="button" aria-label="缩小">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>
+        </button>
+        <button class="tool-btn" id="resetView" type="button" aria-label="复位">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>
+        </button>
+        <button class="tool-btn is-on" id="spinBtn" type="button" aria-label="自动旋转" title="自动旋转" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5c4.4 0 7.5 3.4 7.5 7.5S16.4 19.5 12 19.5 4.5 16.1 4.5 12"/><path d="M12 2.5v4M12 21.5v-4M2.5 12h4M21.5 12h-4"/></svg>
+        </button>
+      </div>
+
+      <div class="taoism-legend" id="taoismLegend" hidden>
+        <span>道教信众密度</span>
+        <i class="grad"></i>
+        <span class="low">低</span><span class="high">高</span>
+      </div>
+
+      <div class="tooltip" id="tooltip" hidden>
+        <strong id="ttName"></strong>
+        <span id="ttRel"></span>
+      </div>
+
+      <div class="welcome" id="welcome">
+        <div class="welcome-inner">
+          <span class="welcome-eyebrow">探索 · EXPLORE</span>
+          <h2>信仰如何塑造世界</h2>
+          <p>一张可以缩放到细节的宗教地图。点击任意国家，查看宗教构成与历史脉络；切换到「道教分布」，追踪一个本土宗教走向世界的路径。</p>
+          <button class="primary-btn" id="welcomeStart" type="button">开始探索</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="detail" id="detail" aria-live="polite">
+      <div class="detail-inner" id="detailInner"></div>
+    </aside>
+  </main>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-scrim" data-close-modal></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="icon-btn modal-close" id="modalClose" aria-label="关闭">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+    </button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="loading-mark">
+    <svg viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1" opacity=".35"/>
+      <path d="M24 3a21 21 0 0 1 0 42 10.5 10.5 0 0 0 0-21 10.5 10.5 0 0 1 0-21Z" fill="currentColor"/>
+    </svg>
+  </div>
+  <p>正在绘制世界…</p>
+</div>
+
+<script src="./assets/js/world-geo.js"></script>
+<script src="./assets/js/data.js"></script>
+<script src="./assets/js/map-engine.js"></script>
+<script src="./assets/js/app.js"></script>
+</body>
+</html>

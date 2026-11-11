@@ -1,0 +1,18 @@
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+
+# 临时截图与调试输出
+.shots/
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,45 @@
+# 静态站 / 前端项目的常见忽略项
+# 原则：凡是「生成的」「体积大的」「本机专属的」都不要进仓库
+
+# ---------- 依赖与构建产物 ----------
+node_modules/
+dist/
+build/
+.cache/
+*.tsbuildinfo
+
+# ---------- 系统与编辑器 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# ---------- 日志与临时文件 ----------
+*.log
+npm-debug.log*
+*.tmp
+*.bak
+
+# ---------- 环境与密钥（绝不能进仓库） ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.wrangler/
+
+# ---------- 大素材：视频、音频、原始设计稿 ----------
+# 单文件超过 25 MiB 会导致 Cloudflare Pages 整站部署失败
+*.mp4
+*.mov
+*.avi
+*.psd
+*.ai
+*.sketch
+
+# ---------- 调试残留 ----------
+.shots/
+_probe*
+_bench*
+*.spec.png

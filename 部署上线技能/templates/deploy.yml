@@ -1,0 +1,53 @@
+# Cloudflare Pages 自动部署（Direct Upload 项目专用）
+#
+# 用法：
+#   1. 仓库 Settings → Secrets and variables → Actions 配好：
+#        CLOUDFLARE_API_TOKEN   （Account / Cloudflare Pages / Edit）
+#        CLOUDFLARE_ACCOUNT_ID  （32 位十六进制）
+#   2. 把本文件放到 .github/workflows/deploy.yml
+#   3. push 到 main，或到 Actions 页面手动 Run workflow
+#
+# 如果是 Git 集成项目，不要用这个文件，Cloudflare 会自己构建。
+
+name: 部署到 Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # 单独一步：密钥缺失时这一步直接红，故障一眼可见
+      # （GitHub 的 job 日志接口要 admin 权限，协作者读不到日志）
+      - name: 检查密钥是否已经配好
+        run: |
+          missing=0
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::仓库缺少 Secret：CLOUDFLARE_API_TOKEN"; missing=1
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::仓库缺少 Secret：CLOUDFLARE_ACCOUNT_ID"; missing=1
+          fi
+          [ "$missing" = "0" ] || exit 1
+
+      # 不用第三方 wrangler action：它把真正的报错包了一层
+      # 有构建步骤时，在这里先跑 npm ci && npm run build
+
+      # ---------- 多站部署：复制本段改 project-name 即可 ----------
+      - name: 部署到 site-a（主站）
+        run: npx --yes wrangler@4 pages deploy prototype --project-name site-a --branch main
+
+      - name: 部署到 site-b（备用地址，保持同步）
+        run: npx --yes wrangler@4 pages deploy prototype --project-name site-b --branch main

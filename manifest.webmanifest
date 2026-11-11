@@ -1,0 +1,33 @@
+{
+  "name": "世界宗教地图 · World Religion Atlas",
+  "short_name": "宗教地图",
+  "description": "可缩放的世界宗教分布地图，支持平面与 3D 地球，点击国家查看宗教构成与历史，并附道教全球分布专题。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070a0f",
+  "theme_color": "#0b0f14",
+  "categories": ["education", "reference", "travel"],
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

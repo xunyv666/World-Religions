@@ -1,0 +1,50 @@
+# Cloudflare Pages 响应头配置
+# 放在部署目录根部（如 prototype/_headers），只有 Cloudflare 会读这个文件。
+# 语法：路径块 + 两空格缩进的头。不支持正则，只支持 * 通配。
+
+# ---------------- 安全头：全站 ----------------
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# ---------------- 页面本体：不缓存，改完立刻生效 ----------------
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ---------------- 带 hash 的构建产物：永久缓存 ----------------
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# ---------------- 模型权重：内容永不变化 ----------------
+/models/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# ---------------- 第三方运行时：跟版本走，别设太长 ----------------
+# 升级版本时缓存会打架，30 天是折中
+/vendor/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=2592000
+
+# ---------------- 媒体：中等缓存，支持拖动进度条 ----------------
+/media/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Accept-Ranges: bytes
+
+# ---------------- 图标：1 天，换图能较快生效 ----------------
+/favicon.ico
+  Cache-Control: public, max-age=86400
+  Content-Type: image/x-icon
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=86400
+
+# ---------------- MIME 纠正：类型错了，nosniff 下彻底不可用 ----------------
+/vendor/mediapipe/vision_wasm_internal.wasm
+  Content-Type: application/wasm
+
+/vendor/mediapipe/vision_wasm_nosimd_internal.wasm
+  Content-Type: application/wasm
