@@ -16,3 +16,6 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
+
+# wrangler CLI 缓存
+.wrangler/
