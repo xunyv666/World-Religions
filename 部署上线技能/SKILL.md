@@ -116,7 +116,7 @@ git switch -c feat/xxx                    # 从当前位置开分支
 **不要 `--force`**，先 `git pull --rebase origin main`。
 
 详细协作流程（含冲突处理、PR、多协作者）见
-[../playbook/03-多人协作-Git流程.md](../playbook/03-多人协作-Git流程.md)。
+[reference/github.md](reference/github.md)。
 
 ---
 
@@ -340,8 +340,8 @@ python tools/serve.py 8931 prototype           # 打开 http://127.0.0.1:8931/
 | [templates/_headers](templates/_headers) | 可直接抄的响应头配置 |
 | [templates/gitignore](templates/gitignore) | 静态站常见忽略项 |
 
-深度背景（为什么这样选、踩过什么坑）在 [../playbook/](../playbook/README.md)：
-02 讲部署细节，03 讲多人协作，08 是上线自检清单。
+深度背景（为什么这么选、踩过什么坑）都写在本文件里：
+部署取舍在阶段二与阶段三，核对排错在 [reference/verify-troubleshoot.md](reference/verify-troubleshoot.md)。
 
 ## 十条硬约束（违反任一条都会出事）
 

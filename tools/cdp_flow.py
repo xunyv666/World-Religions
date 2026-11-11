@@ -13,6 +13,7 @@ steps.json 是一个数组，每项：
 """
 import argparse
 import base64
+import io
 import json
 import os
 import subprocess
@@ -22,6 +23,9 @@ import urllib.parse
 
 import requests
 import websocket
+
+# Windows 控制台默认 GBK，输出中文与日文标点会直接抛 UnicodeEncodeError
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 PORT = 9334
