@@ -1,0 +1,43 @@
+# Cloudflare Pages 响应头配置
+# 放在部署目录根部，只有 Cloudflare 会读这个文件。
+# 语法：路径块 + 两空格缩进的头。不支持正则，只支持 * 通配。
+#
+# 注意：本报站的静态资源没有内容哈希（文件名不带 hash），
+# 所以**不能**按「构建产物」那样缓存一年，否则改完前端用户永远看不到新版。
+# 这里除图标外一律 max-age=0 + must-revalidate。
+
+# ---------------- 安全头：全站 ----------------
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# ---------------- 页面本体：不缓存，改完立刻生效 ----------------
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ---------------- 脚本与样式：不缓存 ----------------
+/assets/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ---------------- Service Worker：必须不缓存，否则新版本装不上 ----------------
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ---------------- 图标：1 天，换图能较快生效 ----------------
+/assets/icons/*
+  Cache-Control: public, max-age=86400
+
+/assets/icons/icon.svg
+  Content-Type: image/svg+xml
+
+/manifest.webmanifest
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json

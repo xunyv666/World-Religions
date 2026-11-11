@@ -1,0 +1,60 @@
+# Cloudflare Pages 自动部署
+#
+# 两种模式二选一，不要同时用：
+#   A. Git 集成（推荐，新项目首选）—— Dashboard 里连好 GitHub 仓库后，
+#      Cloudflare 自己构建，**不需要这个文件**。
+#      Build command 留空，Build output directory 填 dist（或仓库根目录）。
+#   B. Direct Upload（本文件适用）—— 仓库 Secrets 里配好：
+#        CLOUDFLARE_API_TOKEN   （Account / Cloudflare Pages / Edit）
+#        CLOUDFLARE_ACCOUNT_ID  （32 位十六进制，wrangler whoami 能看到）
+#      推送 main 即触发部署。
+#
+# 项目名走仓库变量 CF_PROJECT_NAME，没配就回落到默认名：
+#   Settings → Secrets and variables → Actions → Variables → CF_PROJECT_NAME
+
+name: 部署到 Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # 单独一步：密钥缺失时这一步直接红，故障一眼可见
+      # （GitHub 的 job 日志接口要 admin 权限，协作者读不到日志）
+      - name: 检查密钥是否已经配好
+        run: |
+          missing=0
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::仓库缺少 Secret：CLOUDFLARE_API_TOKEN"; missing=1
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::仓库缺少 Secret：CLOUDFLARE_ACCOUNT_ID"; missing=1
+          fi
+          [ "$missing" = 0 ] || exit 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 收集静态文件到 dist/
+        run: python tools/build_dist.py --clean
+
+      # 不用第三方 wrangler action：它把真正的报错包了一层
+      # 纯静态站没有构建步骤，直接跑 wrangler 即可
+      - name: 部署到 Cloudflare Pages
+        env:
+          PROJECT: ${{ vars.CF_PROJECT_NAME || 'world-religion-atlas' }}
+        run: npx --yes wrangler@4 pages deploy dist --project-name "$PROJECT" --branch main
