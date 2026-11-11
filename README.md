@@ -84,13 +84,19 @@ python tools/check_geo.py
 完整流程见 [`部署上线技能/SKILL.md`](部署上线技能/SKILL.md)（四阶段：
 代码进 GitHub → Cloudflare Pages 建项目 → 接通自动部署 → 上线核对）。
 
-仓库已备好 `_headers`、`404.html`、`.github/workflows/deploy.yml`
-与 `tools/build_dist.py`。两条路：
+本项目用 **Git 集成**：Cloudflare 直接连 GitHub 仓库，`main` 一推送就重新
+构建上线，仓库里不需要放任何部署工作流（Direct Upload 才需要）。
 
-- **Git 集成**（新项目首选）：Dashboard 连好仓库，Build command 留空，
-  Build output directory 填 `dist`。
-- **Direct Upload**：仓库 Secrets 配 `CLOUDFLARE_API_TOKEN`、
-  `CLOUDFLARE_ACCOUNT_ID`，Variables 配 `CF_PROJECT_NAME`，推送 `main` 即部署。
+Dashboard 建项目时按下面填：
+
+| 字段 | 值 |
+|---|---|
+| Build command | `python3 tools/build_dist.py \|\| python tools/build_dist.py` |
+| Build output directory | `dist` |
+| Root directory | 留空（仓库根） |
+
+`tools/build_dist.py` 只把运行时真正需要的文件收进 `dist/`（页面、脚本、
+图标、PWA 三件套），`data/` 下的底图中间产物不上传。
 
 静态资源文件名不带内容哈希，所以 `_headers` 里除图标外一律
 `max-age=0, must-revalidate`——缓存一年会让改完的前端永远发不出去。
