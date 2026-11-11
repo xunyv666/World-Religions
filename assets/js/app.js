@@ -51,10 +51,6 @@
       .filter(function (k) { return rel[k] > 0; })
       .sort(function (a, b) { return rel[b] - rel[a]; });
   }
-  function topFaith(rel) {
-    var keys = sortedRel(rel).filter(function (k) { return k !== "irr" && k !== "oth"; });
-    return keys.length ? keys[0] : sortedRel(rel)[0] || "irr";
-  }
   function topKey(rel) {
     return sortedRel(rel)[0] || "irr";
   }
@@ -295,8 +291,7 @@
     var rel = normRel(st.rel);
     var keys = sortedRel(rel);
     var dom = keys[0];
-    var faith = topFaith(st.rel);
-    var history = HISTORY[name] || defaultHistory(st.zh || name, st);
+    var history = HISTORY[name] || defaultHistory(name, st);
     var related = REGIONS.filter(function (r) { return r.country === name; });
 
     var html = '<button class="detail-close" data-close-detail aria-label="关闭">✕</button>';
@@ -365,16 +360,30 @@
     return "道教与华人移民、民间信仰和节庆仪式一同传播，往往以宫庙与祭祀网络的形式存在，而非独立教会。";
   }
 
-  function defaultHistory(zh, st) {
+  /* 尚未单独撰写历史的国家：用区域模板生成，
+     让每个国家的时间线贴合本地实际，而不是同一套空话。 */
+  function defaultHistory(name, st) {
+    var zh = st.zh || name;
     var rel = normRel(st.rel);
-    var faith = topFaith(st.rel);
+    var faith = topKey(st.rel);
     var r = REL[faith] || REL.oth;
-    return [
-      { y: "古代", t: zh + "最早的信仰形态以自然崇拜、祖先祭祀与地方神灵为主，宗教生活与族群身份紧密相连。" },
-      { y: r.arrival, t: r.nameZh + "逐步传入并扎根，与本地传统相互吸收，形成具有地方特色的仪式与社群。" },
-      { y: "近现代", t: "殖民、贸易、移民与现代化重塑了宗教版图，国家与宗教的关系不断调整。" },
-      { y: "当代", t: "目前以" + r.nameZh + "为主，约占 " + fmtPct(rel[faith]) + "；宗教多元与世俗化趋势同时存在。" }
-    ];
+    var pct = fmtPct(rel[faith]);
+    var region = (window.COUNTRY_REGION || {})[name] || "default";
+    var tpls = window.HISTORY_TEMPLATES || {};
+    var arr = tpls[region] || tpls.default || [];
+    var now = faith === "irr"
+      ? "无宗教认同成为多数（约 " + pct + "）；教会与宗教社群仍在节庆、慈善、丧葬与婚育等场景中发挥作用。"
+      : "以" + r.name + "为主（约 " + pct + "）；宗教社群在节庆、教育与慈善中继续发挥作用，世俗化与多元化同时推进。";
+    return arr.map(function (h) {
+      return {
+        y: h.y,
+        t: String(h.t)
+          .replace(/\{zh\}/g, zh)
+          .replace(/\{rel\}/g, r.name)
+          .replace(/\{pct\}/g, pct)
+          .replace(/\{now\}/g, now)
+      };
+    });
   }
 
   /* ---------- 详情：宗教热点地区 ---------- */
@@ -761,7 +770,7 @@
       "<p>拖动平移，滚轮或双指缩放，点击国家查看详情。快捷键：" +
       '<span class="kbd">+</span><span class="kbd">−</span> 缩放，<span class="kbd">0</span> 复位，<span class="kbd">Esc</span> 关闭面板。</p>' +
       "<h3>离线与安卓</h3>" +
-      "<p>网页端支持安装到主屏幕（PWA）。安卓原生外壳在仓库的 <code>android/</code> 目录，使用 Android Studio 构建即可得到 APK。</p>" +
+      "<p>网页端支持安装到主屏幕（PWA）：Chrome / Edge 菜单里的「安装应用」，装完可离线打开，桌面图标与原生应用一致。仓库不含安卓原生外壳，网页版在手机浏览器里全屏运行即为全屏体验。</p>" +
       "<p class=\"disclaimer\" style=\"margin-top:18px\">地图几何数据：@surbowl/world-geo-json-zh（简体中文世界地图，中国标准地图口径）；代码以 MIT 许可发布。</p>";
     $("#modalBody").innerHTML = html;
     $("#modal").hidden = false;

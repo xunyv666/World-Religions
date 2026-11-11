@@ -559,6 +559,145 @@
 
   window.COUNTRY_HISTORY = H;
 
+  /* ---------- 区域归类 ----------
+     尚未单独撰写历史的国家，按区域套用模板，
+     让时间线贴合本地实际，而不是 175 个国家共用同一套空话。 */
+  var REGION_OF = {};
+  function mark(key, names) {
+    names.forEach(function (n) { REGION_OF[n] = key; });
+  }
+
+  mark("isl", ["Afghanistan", "Algeria", "Azerbaijan", "Brunei", "Cyprus", "Djibouti", "Gambia",
+    "Guinea", "Jordan", "Kuwait", "Lebanon", "Libya", "Mali", "Mauritania", "Morocco", "Niger",
+    "Oman", "Qatar", "Senegal", "Somalia", "Sudan", "Syria", "Tunisia", "United Arab Emirates",
+    "Western Sahara", "West Bank", "Yemen"]);
+
+  mark("ca", ["Armenia", "Georgia", "Kazakhstan", "Kyrgyzstan", "Tajikistan", "Turkmenistan",
+    "Uzbekistan"]);
+
+  mark("africa", ["Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", "Cameroon",
+    "Central African Republic", "Chad", "Democratic Republic of the Congo", "Equatorial Guinea",
+    "Eritrea", "Gabon", "Ghana", "Guinea Bissau", "Ivory Coast", "Kenya", "Lesotho", "Liberia",
+    "Madagascar", "Malawi", "Mozambique", "Namibia", "Republic of the Congo", "Rwanda",
+    "Sierra Leone", "South Sudan", "Swaziland", "Togo", "Uganda", "United Republic of Tanzania",
+    "Zambia", "Zimbabwe"]);
+
+  mark("sea", ["Cambodia", "Laos", "East Timor"]);
+
+  mark("sa", ["Bhutan", "Nepal"]);
+
+  mark("ea", ["Mongolia", "North Korea", "South Korea"]);
+
+  mark("europe", ["Albania", "Austria", "Belarus", "Belgium", "Bosnia and Herzegovina", "Bulgaria",
+    "Croatia", "Czech Republic", "Denmark", "Estonia", "Finland", "Hungary", "Iceland", "Ireland",
+    "Latvia", "Lithuania", "Luxembourg", "Macedonia", "Malta", "Moldova", "Montenegro",
+    "Netherlands", "Norway", "Portugal", "Republic of Serbia", "Romania", "Slovakia", "Slovenia",
+    "Sweden", "Switzerland"]);
+
+  mark("latam", ["Belize", "Bolivia", "Chile", "Colombia", "Costa Rica", "Ecuador", "El Salvador",
+    "Falkland Islands", "Guatemala", "Honduras", "Nicaragua", "Panama", "Paraguay", "Peru",
+    "Uruguay", "Venezuela"]);
+
+  mark("carib", ["Bermuda", "Cuba", "Dominican Republic", "Guyana", "Haiti", "Jamaica",
+    "Puerto Rico", "Suriname", "The Bahamas", "Trinidad and Tobago"]);
+
+  mark("oceania", ["Fiji", "New Caledonia", "Papua New Guinea", "Solomon Islands", "Vanuatu"]);
+
+  mark("polar", ["Greenland", "French Southern and Antarctic Lands"]);
+
+  window.COUNTRY_REGION = REGION_OF;
+
+  /* ---------- 区域历史模板 ----------
+     占位符：{zh} 中文名、{rel} 主导宗教、{pct} 主导比例、{now} 当代概况（由界面层生成）。 */
+  var TPL = {};
+  function tpl(key, arr) { TPL[key] = arr; }
+
+  tpl("isl", [
+    { y: "7 世纪", t: "伊斯兰教随阿拉伯半岛的扩张向外传播，商路、征战与部族结盟成为信仰扩展的主要途径。" },
+    { y: "10—15 世纪", t: "苏菲教团在商路城镇与乡村建立道堂和经堂，把伊斯兰信仰与地方习俗缝合起来，形成跨地区的教派网络。" },
+    { y: "16—19 世纪", t: "伊斯兰王朝统治下，清真寺、经学院与宗教慈善地产构成社会基础设施；与基督徒、犹太教徒、祆教徒长期共存又摩擦。" },
+    { y: "19—20 世纪", t: "殖民势力介入，铁路、港口与传教学校陆续出现；反殖民的宗教政治兴起，世俗民族主义与宗教动员交替登场。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("ca", [
+    { y: "10—16 世纪", t: "苏菲教团深入草原与绿洲城市，纳克什班迪、亚萨维等教结节成师承网络；伊斯兰法典与当地习惯法并行。" },
+    { y: "19 世纪", t: "沙俄扩张后，中亚与高加索诸地先后进入俄罗斯帝国；油田、铁路与定居点建设改变了原有的人口与宗教分布。" },
+    { y: "20 世纪", t: "苏维埃时期推行无神论教育，清真寺与教会多被关闭或改作他用，宗教实践转入家庭与地下。" },
+    { y: "1991 年后", t: "独立后宗教场所陆续复建，宗教复兴与国家认同建设并行，斋月、开斋节重新回到公共日历。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("africa", [
+    { y: "古代—15 世纪", t: "本土信仰以祖先崇拜、自然神灵与口传仪式为主，部分地区形成王权与祭司相连的信仰体系。" },
+    { y: "16—19 世纪", t: "大西洋与印度洋贸易把传教士带到沿岸与内陆，基督教会在殖民据点建立教会、学校与医院。" },
+    { y: "19—20 世纪", t: "殖民统治常以「私有财产」名义没收土地、压制本土灵性中心；争取独立的运动中，一些国家把基督教国家认同写进宪法。" },
+    { y: "20 世纪", t: "城市中的五旬节派、灵恩派等新教宗派增长迅速，教会成为提供就业、教育与社会网络的重要机构。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("sea", [
+    { y: "古代—13 世纪", t: "印度教与佛教经海陆贸易传入，与本土的祖先崇拜、精灵信仰和宫廷仪式相互渗透，爪哇、苏门答腊、占城等地留下大量遗址。" },
+    { y: "14—17 世纪", t: "伊斯兰教随马来、阿拉伯与印度商人的航线进入马来群岛，清真寺与苏菲道堂在港口与乡村落地，信仰版图随贸易重排。" },
+    { y: "17—19 世纪", t: "欧洲殖民者以福音传教为先锋建立教会；天主教与新教在各地竞争，也带来了学校、医疗与文字教育。" },
+    { y: "19—20 世纪", t: "民族主义运动常以佛教、伊斯兰或传统符号动员民众；殖民统治末期，宗教认同逐渐与民族认同合流。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("sa", [
+    { y: "古代", t: "印度教与佛教在此并行：喜马拉雅南麓的村社祭祀、圣泉朝拜，与寺院、僧团传统彼此嵌套。" },
+    { y: "18—19 世纪", t: "东印度公司扩张时期，王朝、庙宇与土地关系被重组；加德满都谷地的贸易与移民路线把藏传佛教带入不丹与尼泊尔山区。" },
+    { y: "19—20 世纪", t: "传教活动带来新教小社群；20 世纪中叶以来，徒步朝圣、寺院教育与海外劳工汇款成为社会生活的重要部分。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("ea", [
+    { y: "古代", t: "佛道传入与本土的萨满、山神祭祀相遇，形成寺院、宫观与村落祭坛并立的信仰格局。" },
+    { y: "近现代", t: "殖民与半殖民经历带来新教；社会主义时期的无神论教育使宗教机构收缩，信仰更多转入家庭与民间。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("europe", [
+    { y: "中世纪", t: "基督教成为社会结构本身：教区、修道院与经院学校承担教育、慈善和土地管理，教会与王权互相授权。" },
+    { y: "16—17 世纪", t: "宗教改革分裂西欧，新教与天主教并立，随后的宗教战争与教派分立重塑了民族与疆域。" },
+    { y: "18—19 世纪", t: "启蒙运动与世俗国家兴起，宗教从公共生活退向家庭与社区；工业化带来城市移民，也带来新的信仰组合。" },
+    { y: "20 世纪", t: "两次世界大战与共产主义政权的无神论教育削弱教会影响；战后世俗化加速，天主教在南部与东欧重新凝聚。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("latam", [
+    { y: "16 世纪", t: "西班牙与葡萄牙的征服带来天主教传教团，原住民信仰与天主教仪式在「圣礼化」中并存，形成混血的宗教文化。" },
+    { y: "19 世纪", t: "独立运动多以天主教为核心动员；教区、修道院与教育机构成为新国家建制的骨架。" },
+    { y: "20 世纪", t: "解放神学在部分国家兴起，把社会不平等写进弥撒；同期福音派与五旬节派在城乡迅速扩张。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("carib", [
+    { y: "16—18 世纪", t: "欧洲殖民者从西非贩运奴隶；非洲传统信仰与祖先崇拜、天主教、以及自印度移入者的印度教，在强制迁徙中交叉混合。" },
+    { y: "19—20 世纪", t: "废除奴隶制后，英语、法语、西班牙语各自的教派传统留了下来；移民潮又带来印度教、伊斯兰教与新教宗派。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("oceania", [
+    { y: "古代", t: "美拉尼西亚、波利尼西亚与密克罗尼西亚的航海族群保有祖先崇拜、图腾与圣地传统，仪式与氏族结构紧密相连。" },
+    { y: "19—20 世纪", t: "殖民传教带来基督教各派；福音派对岛屿社会的改造尤为深刻，学校与教堂成为社区中心。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("polar", [
+    { y: "16—19 世纪", t: "欧洲航海与捕鲸活动带来最早的传教记录，挪威、冰岛与丹麦王室把基督教带入北极聚落。" },
+    { y: "20 世纪", t: "主权国家在这些地区设立科考站与行政中心，常住人口以轮换为主，宗教生活依托随行教职人员与网络聚会。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  tpl("default", [
+    { y: "古代", t: "{zh}最早的信仰形态以自然崇拜、祖先祭祀与地方神灵为主，宗教生活与族群身份紧密相连。" },
+    { y: "近现代", t: "贸易、殖民与移民带来新的信仰，{rel}在这一时期扎根，并与本地传统相互吸收。" },
+    { y: "当代", t: "{now}" }
+  ]);
+
+  window.HISTORY_TEMPLATES = TPL;
+
   /* ---------- 宗教热点地区 ---------- */
   var R = [];
   function reg(id, name, en, country, lat, lon, rel, note, history) {
