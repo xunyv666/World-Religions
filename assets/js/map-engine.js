@@ -1500,5 +1500,11 @@
   };
 
   window.ReligionMap = ReligionMap;
-  window.MAP_UTIL = { normalizeLon: normalizeLon, clamp: clamp };
+  /* 供自检脚本使用：展开与命中判定是纯函数，可以脱离 canvas 单独验证 */
+  window.MAP_UTIL = {
+    normalizeLon: normalizeLon,
+    clamp: clamp,
+    unwrapRing: unwrapRing,
+    pointInRings: pointInRings
+  };
 })();

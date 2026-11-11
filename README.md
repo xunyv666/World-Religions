@@ -21,6 +21,7 @@
 
 ```
 index.html                  页面本体
+升级清单.md / .docx          升级项目清单（改完用 tools/md2docx.py 重新生成 Word）
 assets/
   css/style.css             全部样式
   js/world-geo.js           底图几何（构建产物，勿手改）
@@ -35,6 +36,7 @@ tools/
   build_world_geo.py        底图构建：world.zh.json → countries.geo.json → world-geo.js
   build_dist.py             收集静态文件到 dist/，供 Cloudflare Pages 部署
   check_geo.py              数据与几何的覆盖自检
+  md2docx.py                把升级清单.md 转成 Word 文档
   diff_basemap.py           换底图前后国家集合对比
   cdp_shot.py / cdp_flow.py 无头浏览器截图与交互取证
 部署上线技能/                从本地到上线的完整操作手册
