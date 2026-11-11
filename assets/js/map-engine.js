@@ -77,7 +77,16 @@
   /* 原始数据里跨 ±180° 的多边形（俄罗斯楚科奇半岛、斐济等）直接投影会被拉成
      横贯全图的一条直线。这里把环内经度展开成连续序列：相邻点经度差超过 180°
      时补足 360°，环就不会在日界线上断开。之后由 drawFlat 按 ±360° 副本绘制，
-     跨日界线的部分会同时出现在地图左右两侧。 */
+     跨日界线的部分会同时出现在地图左右两侧。
+
+     例外：贴着极点的环段（南极洲沿 lat≈-90° 从 -180° 扫到 +180°）本身长度就
+     超过 180°，按上面的规则回绕会被折成锯齿，南极洲的填充就会整个翻到
+     海岸线以北。两端都在极点附近时保持原方向，让它沿极点边缘扫过去。 */
+  function isPolarEdge(a, b) {
+    var P = 89.5;
+    return (a[1] <= -P && b[1] <= -P) || (a[1] >= P && b[1] >= P);
+  }
+
   function unwrapRing(raw) {
     var out = new Array(raw.length);
     var prev = raw[0][0];
@@ -85,8 +94,10 @@
     for (var i = 1; i < raw.length; i++) {
       var lon = raw[i][0];
       var d = lon - prev;
-      if (d > 180) { lon -= 360; }
-      else if (d < -180) { lon += 360; }
+      if (!isPolarEdge(out[i - 1], raw[i])) {
+        if (d > 180) { lon -= 360; }
+        else if (d < -180) { lon += 360; }
+      }
       prev = lon;
       out[i] = [lon, raw[i][1]];
     }
@@ -240,7 +251,7 @@
       else if (g.type === "MultiPolygon") { polysRaw = g.coordinates; }
       else { continue; }
 
-      var rings = [], spans = [];
+      var rings = [], spans = [], closures = [];
       var minLat = 90, maxLat = -90, count = 0;
       for (var pi = 0; pi < polysRaw.length; pi++) {
         var poly = polysRaw[pi];
@@ -261,6 +272,7 @@
           }
           rings.push(ring);
           spans.push({ min: mn, max: mx, minLat: rmn, maxLat: rmx });
+          closures.push(markClosureEdges(ring));
         }
       }
       if (!rings.length) { continue; }
@@ -273,12 +285,64 @@
         stats: stats,
         rings: rings,
         spans: spans,
+        closures: closures,
         minLon: 180, maxLon: -180,
         minLat: minLat, maxLat: maxLat,
         count: count
       });
     }
     return applyTerritory(out);
+  }
+
+  /* ---------- 闭合边 ---------- */
+  /* 极地多边形（南极洲）沿 ±180° 经线闭合到极点，这段是几何闭合用的，
+     不是真实国界。填充时必须保留，否则大陆填不出来；描边时要跳过，
+     否则地球上会多出一条从海岸拉到极点的竖线。
+
+     判定：连续的一段日界线边，且这一段碰到了极点边缘。
+     俄罗斯楚科奇也有一段贴着日界线的海岸，但它不接极点，所以照常描边。 */
+  var DATELINE_EPS = 179.9995;
+  var POLE_EPS = 89.5;
+
+  function onDateline(a, b) {
+    return (a[0] >= DATELINE_EPS || a[0] <= -DATELINE_EPS) &&
+      (b[0] >= DATELINE_EPS || b[0] <= -DATELINE_EPS) &&
+      (a[0] > 0) === (b[0] > 0);
+  }
+
+  function markClosureEdges(ring) {
+    var n = ring.length;
+    var flags = new Array(n);
+    var i = 0;
+    while (i < n) {
+      if (!onDateline(ring[i], ring[(i + 1) % n])) { flags[i] = false; i++; continue; }
+      var j = i;
+      while (j < n && onDateline(ring[j], ring[(j + 1) % n])) { j++; }
+      var pole = false;
+      for (var k = i; k <= j && k < n; k++) {
+        if (Math.abs(ring[k][1]) >= POLE_EPS) { pole = true; break; }
+      }
+      for (var m = i; m < j; m++) { flags[m] = pole; }
+      i = j;
+    }
+    return flags;
+  }
+
+  /* 在闭合边处把环拆成若干开放折线 */
+  function splitClosure(ring, flags) {
+    var n = ring.length;
+    var polys = [];
+    var cur = [ring[0]];
+    for (var i = 1; i < n; i++) {
+      if (flags[i - 1]) {
+        if (cur.length > 1) { polys.push(cur); }
+        cur = [ring[i]];
+      } else {
+        cur.push(ring[i]);
+      }
+    }
+    if (cur.length > 1) { polys.push(cur); }
+    return polys.length ? polys : [ring];
   }
 
   /* ---------- 主类 ---------- */
@@ -535,6 +599,9 @@
       if (!this._pathFlatFeature(ctx, f)) { continue; }
       ctx.fillStyle = this._currentColor(f);
       ctx.fill("evenodd");
+      /* 描边单独走一条路径：闭合边（南极洲沿日界线闭合到极点的那段）不算国界 */
+      ctx.beginPath();
+      this._pathFlatFeature(ctx, f, true);
       ctx.strokeStyle = "rgba(5,10,16,.72)";
       ctx.lineWidth = 0.6;
       ctx.stroke();
@@ -565,8 +632,9 @@
 
   /* 把一个国家所有环的「可见副本」加入当前路径。
      环的经度已展开成连续序列，这里按 ±360° 平移，取落在画布内的那些副本，
-     跨日界线的部分就会同时出现在地图左右两侧。返回是否画到了东西。 */
-  ReligionMap.prototype._pathFlatFeature = function (ctx, f) {
+     跨日界线的部分就会同时出现在地图左右两侧。返回是否画到了东西。
+     skipClosure 为真时断开闭合边（只在描边时用，填充必须闭合）。 */
+  ReligionMap.prototype._pathFlatFeature = function (ctx, f, skipClosure) {
     var w = this.width, h = this.height;
     var s = this.flatScale();
     var viewLon = this.view.lon;
@@ -578,6 +646,7 @@
     for (var r = 0; r < f.rings.length; r++) {
       var ring = f.rings[r];
       var span = f.spans[r];
+      var flags = skipClosure ? (f.closures && f.closures[r]) : null;
       var kFrom = Math.floor((vlo - span.max) / 360);
       var kTo = Math.ceil((vhi - span.min) / 360);
       for (var k = kFrom; k <= kTo; k++) {
@@ -589,7 +658,7 @@
         for (var i = 0; i < ring.length; i++) {
           var x = w / 2 + (ring[i][0] + off - viewLon) * s;
           var y = h / 2 - (ring[i][1] - viewLat) * s;
-          if (i === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
+          if (i === 0 || (flags && flags[i - 1])) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
         }
       }
     }
@@ -658,7 +727,7 @@
 
   ReligionMap.prototype._strokeFeature = function (ctx, f, color, width) {
     ctx.beginPath();
-    if (!this._pathFlatFeature(ctx, f)) { return; }
+    if (!this._pathFlatFeature(ctx, f, true)) { return; }
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
     ctx.lineJoin = "round";
@@ -900,9 +969,8 @@
       if (!any) { continue; }
       ctx.fillStyle = this._currentColor(f);
       ctx.fill("evenodd");
-      ctx.strokeStyle = "rgba(4,9,14,.72)";
-      ctx.lineWidth = 0.55;
-      ctx.stroke();
+      /* 描边单独走一条路径：闭合边（南极洲沿日界线闭合到极点的那段）不算国界 */
+      this._strokeGlobeFeature(ctx, f, "rgba(4,9,14,.72)", 0.55);
     }
 
     /* 光照 */
@@ -960,6 +1028,25 @@
     return out;
   };
 
+  /* 开放折线的球面裁剪：与 _clipRing 相同，但不把末点接回首点 */
+  ReligionMap.prototype._clipOpen = function (pts) {
+    var out = [];
+    var n = pts.length;
+    for (var i = 0; i < n - 1; i++) {
+      var a = pts[i];
+      var b = pts[i + 1];
+      var ain = a[2] >= 0;
+      var bin = b[2] >= 0;
+      if (ain) { out.push([a[0], a[1]]); }
+      if (ain !== bin) {
+        var t = a[2] / (a[2] - b[2]);
+        out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+      }
+    }
+    if (n && pts[n - 1][2] >= 0) { out.push([pts[n - 1][0], pts[n - 1][1]]); }
+    return out;
+  };
+
   /* 开放折线裁剪（避免经纬线闭合产生穿过球面的假线） */
   ReligionMap.prototype._clipLine = function (pts) {
     var segs = [], cur = [];
@@ -993,18 +1080,22 @@
     var cx = this.gcx, cy = this.gcy, R = this.R, any = false;
     ctx.beginPath();
     for (var r = 0; r < f.rings.length; r++) {
-      var ring = f.rings[r];
-      var pts = new Array(ring.length);
-      for (var k = 0; k < ring.length; k++) {
-        pts[k] = this.project(ring[k][1], ring[k][0]);
+      var flags = f.closures ? f.closures[r] : null;
+      var polys = flags ? splitClosure(f.rings[r], flags) : [f.rings[r]];
+      for (var pi = 0; pi < polys.length; pi++) {
+        var ring = polys[pi];
+        var pts = new Array(ring.length);
+        for (var k = 0; k < ring.length; k++) {
+          pts[k] = this.project(ring[k][1], ring[k][0]);
+        }
+        var clipped = this._clipOpen(pts);
+        if (clipped.length < 3) { continue; }
+        ctx.moveTo(cx + R * clipped[0][0], cy - R * clipped[0][1]);
+        for (var q = 1; q < clipped.length; q++) {
+          ctx.lineTo(cx + R * clipped[q][0], cy - R * clipped[q][1]);
+        }
+        any = true;
       }
-      var clipped = this._clipRing(pts);
-      if (clipped.length < 3) { continue; }
-      ctx.moveTo(cx + R * clipped[0][0], cy - R * clipped[0][1]);
-      for (var q = 1; q < clipped.length; q++) {
-        ctx.lineTo(cx + R * clipped[q][0], cy - R * clipped[q][1]);
-      }
-      any = true;
     }
     if (!any) { return; }
     ctx.strokeStyle = color;
