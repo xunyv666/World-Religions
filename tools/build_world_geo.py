@@ -141,6 +141,19 @@ def main():
 
     feats.sort(key=lambda x: x["id"])
 
+    # 同名的要素合并成一个（数据源里澳大利亚等被拆成了两块）
+    merged = {}
+    order = []
+    for f in feats:
+        key = f["properties"]["name"]
+        if key not in merged:
+            merged[key] = f
+            order.append(key)
+        else:
+            host = merged[key]
+            host["geometry"] = merge_geometry(host["geometry"], f["geometry"])
+    feats = [merged[k] for k in order]
+
     # 附属地并入母国
     by_iso = {f["id"]: f for f in feats}
     for f in src["features"]:
