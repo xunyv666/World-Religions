@@ -91,6 +91,8 @@ Dashboard 建项目时按下面填：
 
 | 字段 | 值 |
 |---|---|
+| Project name | `world-religions-map`（域名 `world-religions-map.pages.dev`；`world-religions` 已被别的项目占用） |
+| Framework preset | None |
 | Build command | `python3 tools/build_dist.py \|\| python tools/build_dist.py` |
 | Build output directory | `dist` |
 | Root directory | 留空（仓库根） |
