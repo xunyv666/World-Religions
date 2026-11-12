@@ -181,90 +181,181 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.92em;
 .sidebar{
   display:flex;flex-direction:column;
   border-right:1px solid var(--line);
-  background:linear-gradient(180deg,rgba(13,19,28,.96),rgba(9,13,20,.96));
-  padding:18px 16px 14px;
+  background:
+    radial-gradient(120% 40% at 0% 0%,rgba(38,72,108,.16),transparent 62%),
+    linear-gradient(180deg,rgba(13,19,28,.97),rgba(8,12,19,.98));
+  padding:16px 14px 14px;
   overflow-y:auto;
   overflow-x:hidden;
   z-index:30;
   min-height:0;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(216,178,95,.28) transparent;
 }
-.sidebar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.sidebar-head h2{font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:.16em;color:var(--gold-soft)}
-.sidebar-note{font-size:11.5px;line-height:1.65;color:var(--muted-2);margin-bottom:14px}
+.sidebar::-webkit-scrollbar{width:8px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{
+  background:rgba(216,178,95,.22);border-radius:99px;
+  border:2px solid transparent;background-clip:padding-box;
+}
+.sidebar::-webkit-scrollbar-thumb:hover{background:rgba(216,178,95,.42);background-clip:padding-box}
 
-.legend{display:flex;flex-direction:column;gap:1px;margin-bottom:18px}
+.sidebar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sh-title{display:flex;align-items:baseline;gap:8px}
+.sidebar-head h2{
+  font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:.14em;color:var(--gold-soft);
+  display:flex;align-items:center;gap:8px;
+}
+.sidebar-head h2::before{
+  content:"";width:3px;height:14px;border-radius:2px;
+  background:linear-gradient(180deg,var(--gold),rgba(216,178,95,.25));
+}
+.sh-sub{font-size:9px;letter-spacing:.24em;color:var(--muted-2);text-transform:uppercase}
+.sidebar-note{
+  font-size:11px;line-height:1.6;color:var(--muted-2);margin:0 0 10px;
+  padding:0 2px;
+}
+
+/* 图例：两列，按列排（先左列后右列），顺序才是从多到少 */
+.legend{
+  display:grid;grid-template-columns:1fr 1fr;
+  grid-template-rows:repeat(5,auto);grid-auto-flow:column;
+  gap:1px 5px;margin-bottom:16px;
+  padding:6px;border-radius:11px;
+  background:rgba(255,255,255,.018);border:1px solid var(--line);
+}
 .legend-item{
-  display:flex;align-items:center;gap:9px;
-  width:100%;padding:7px 8px;border-radius:8px;
-  text-align:left;font-size:12.5px;color:var(--muted);
+  display:flex;align-items:center;gap:7px;min-width:0;
+  padding:4px 6px;border-radius:7px;
+  text-align:left;font-size:11.5px;color:var(--muted);
   border:1px solid transparent;
-  transition:all .15s;
+  transition:background .15s,color .15s,border-color .15s;
 }
-.legend-item:hover{background:rgba(255,255,255,.045);color:var(--text)}
-.legend-item.is-active{background:rgba(216,178,95,.1);border-color:rgba(216,178,95,.3);color:var(--text)}
-.legend-item.is-dim{opacity:.42}
-.legend-swatch{width:11px;height:11px;border-radius:3px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
-.legend-name{flex:1}
-.legend-count{font-size:10px;color:var(--muted-2);font-variant-numeric:tabular-nums}
+.legend-item:hover{background:rgba(255,255,255,.055);color:var(--text)}
+.legend-item.is-active{background:rgba(216,178,95,.12);border-color:rgba(216,178,95,.32);color:var(--text)}
+.legend-item.is-dim{opacity:.4}
+.legend-swatch{
+  width:3px;height:13px;border-radius:99px;flex:0 0 auto;
+  background:var(--c);
+  box-shadow:0 0 10px -1px var(--c);
+}
+.legend-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 数字右侧配一条占比条，一眼看出哪种宗教占的国家多 */
+.legend-stat{position:relative;width:26px;flex:0 0 auto;text-align:right;padding-bottom:2px}
+.legend-stat i{
+  position:absolute;left:0;bottom:0;height:2px;border-radius:2px;
+  background:var(--c);opacity:.5;display:block;
+}
+.legend-stat b{font-size:9.5px;font-weight:400;color:var(--muted-2);font-variant-numeric:tabular-nums}
+.legend-item.is-active .legend-stat b{color:var(--gold-soft)}
 
-.sidebar-block{margin-bottom:18px}
-.block-title{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
-.block-title span:first-child{font-family:var(--serif);font-size:12.5px;letter-spacing:.12em;color:var(--muted)}
-.block-hint{font-size:9.5px;letter-spacing:.12em;color:var(--muted-2);text-transform:uppercase}
+.sidebar-block{margin-bottom:16px}
+.block-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.block-title span:first-child{
+  font-family:var(--serif);font-size:12.5px;letter-spacing:.12em;color:var(--muted);
+  display:flex;align-items:center;gap:7px;
+}
+.block-title span:first-child::before{
+  content:"";width:2px;height:11px;border-radius:2px;background:rgba(216,178,95,.55);
+}
+.block-hint{font-size:9px;letter-spacing:.14em;color:var(--muted-2);text-transform:uppercase}
 
+/* 图层卡片 */
+.layer-group{
+  display:flex;flex-direction:column;gap:6px;
+  padding:7px;border-radius:12px;
+  background:rgba(255,255,255,.018);border:1px solid var(--line);
+}
 .layer-card{
   display:flex;align-items:center;gap:10px;width:100%;
-  padding:9px 10px;border-radius:10px;margin-bottom:6px;
-  border:1px solid var(--line);background:rgba(255,255,255,.02);
-  text-align:left;transition:all .18s;
+  padding:9px 10px;border-radius:9px;
+  border:1px solid transparent;background:rgba(255,255,255,.03);
+  text-align:left;transition:all .18s;position:relative;overflow:hidden;
 }
-.layer-card:hover{border-color:var(--line-strong);background:rgba(255,255,255,.045)}
-.layer-card.is-active{border-color:rgba(216,178,95,.4);background:rgba(216,178,95,.08)}
+.layer-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,var(--gold),rgba(216,178,95,.2));
+  transform:scaleY(0);transform-origin:center;transition:transform .22s;
+}
+.layer-card:hover{border-color:var(--line-strong);background:rgba(255,255,255,.06)}
+.layer-card.is-active{border-color:rgba(216,178,95,.4);background:rgba(216,178,95,.1)}
+.layer-card.is-active::before{transform:scaleY(1)}
 .layer-icon{width:26px;height:26px;color:var(--muted);flex:0 0 auto}
 .layer-icon svg{width:21px;height:21px;stroke-width:1.4}
 .layer-icon.tao{color:var(--gold)}
 .layer-copy{display:flex;flex-direction:column;min-width:0;flex:1}
 .layer-copy strong{font-size:12.5px;font-weight:600;color:var(--text)}
 .layer-copy small{font-size:10.5px;color:var(--muted-2);margin-top:1px}
-.layer-check{width:16px;height:16px;border-radius:50%;border:1px solid var(--line-strong);color:transparent;font-size:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.layer-check{
+  width:17px;height:17px;border-radius:50%;border:1px solid var(--line-strong);
+  color:transparent;font-size:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  transition:all .18s;
+}
 .layer-card.is-active .layer-check{background:var(--gold);border-color:var(--gold);color:#0c1017}
 .layer-icon.spread{color:var(--gold)}
 
 /* 信众密度：四个宗教的快捷切换 */
-.layer-sub{margin:-2px 0 10px;padding:2px 0 0}
+.layer-sub{margin:2px 0 2px;padding:2px 4px 4px}
 .layer-sub-title{
   display:block;font-size:10px;letter-spacing:.14em;color:var(--muted-2);
   text-transform:uppercase;margin:0 0 7px 2px;
 }
-.faith-chips{display:flex;flex-wrap:wrap;gap:5px}
+.layer-hint{font-size:9.5px;color:var(--muted-2);margin:5px 2px 0;line-height:1.45}
+.faith-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .faith-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:5px 9px;border-radius:99px;
-  border:1px solid var(--line);background:rgba(255,255,255,.02);
+  position:relative;display:flex;align-items:center;gap:7px;
+  padding:7px 9px;border-radius:9px;overflow:hidden;
+  border:1px solid var(--line);background:rgba(255,255,255,.025);
   font-size:11.5px;color:var(--muted);transition:all .18s;
 }
-.faith-chip .dot{width:7px;height:7px;border-radius:50%}
-.faith-chip:hover{border-color:var(--line-strong);color:var(--text);background:rgba(255,255,255,.05)}
+.faith-chip::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--c);opacity:.55;transition:opacity .18s;
+}
+.faith-chip .dot{
+  width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:var(--c);
+  box-shadow:0 0 8px -1px var(--c);
+}
+.faith-chip:hover{border-color:var(--line-strong);color:var(--text);background:rgba(255,255,255,.055)}
+.faith-chip:hover::before{opacity:.9}
 .faith-chip.is-active{
   border-color:rgba(216,178,95,.45);background:rgba(216,178,95,.1);color:var(--text);
 }
+.faith-chip.is-active::before{opacity:1;width:3px}
+.faith-chip.is-active .dot{box-shadow:0 0 10px 0 var(--c)}
 
-.region-list{display:flex;flex-direction:column;gap:1px;max-height:168px;overflow-y:auto}
+.region-list{
+  display:flex;flex-direction:column;gap:1px;max-height:122px;overflow-y:auto;
+  padding:4px;border-radius:11px;
+  background:rgba(255,255,255,.018);border:1px solid var(--line);
+  scrollbar-width:thin;scrollbar-color:rgba(216,178,95,.25) transparent;
+}
+.region-list::-webkit-scrollbar{width:6px}
+.region-list::-webkit-scrollbar-thumb{background:rgba(216,178,95,.22);border-radius:99px}
 .region-list button{
   display:flex;align-items:center;gap:8px;width:100%;
-  padding:6px 8px;border-radius:7px;text-align:left;
-  font-size:12px;color:var(--muted);
+  padding:5px 8px;border-radius:7px;text-align:left;
+  font-size:11.5px;color:var(--muted);transition:all .15s;
 }
-.region-list button:hover{background:rgba(255,255,255,.045);color:var(--text)}
-.region-list .r-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex:0 0 auto;box-shadow:0 0 8px rgba(216,178,95,.8)}
+.region-list button:hover{background:rgba(216,178,95,.1);color:var(--text)}
+.region-list .r-dot{
+  width:5px;height:5px;border-radius:50%;background:var(--gold);flex:0 0 auto;
+  box-shadow:0 0 8px rgba(216,178,95,.8);
+}
 .region-list .r-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.region-list .r-country{font-size:10px;color:var(--muted-2)}
+.region-list .r-country{font-size:10px;color:var(--muted-2);white-space:nowrap}
 
-.sidebar-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
-.text-btn{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11.5px;padding:4px 0}
+.sidebar-foot{
+  margin-top:auto;padding-top:14px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:2px;
+}
+.text-btn{
+  display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11.5px;
+  padding:4px 0;transition:color .15s;
+}
 .text-btn svg{width:14px;height:14px}
 .text-btn:hover{color:var(--gold-soft)}
-.sidebar-foot p{font-size:10px;color:var(--muted-2);margin-top:7px;letter-spacing:.02em}
+.sidebar-foot p{font-size:10px;color:var(--muted-2);margin:0;padding-top:3px;letter-spacing:.02em}
 
 /* 抽屉遮罩：始终脱离布局，桌面端隐藏 */
 .drawer-scrim{
@@ -643,7 +734,8 @@ html.skip-intro .loading,html.skip-intro .welcome{display:none !important}
     transform:translateX(-104%);
     transition:transform .32s cubic-bezier(.22,.9,.28,1);
     box-shadow:30px 0 70px -30px rgba(0,0,0,.9);
-    padding-top:16px;
+    /* 顶栏是浮在抽屉上的，抽屉内容要让开它，否则标题和关闭按钮点不到 */
+    padding-top:64px;
   }
   body.drawer-open .sidebar{transform:translateX(0)}
   .drawer-scrim{display:block}

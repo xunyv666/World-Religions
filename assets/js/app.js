@@ -153,18 +153,23 @@
     map.features.forEach(function (f) {
       counts[f.dominant] = (counts[f.dominant] || 0) + 1;
     });
+    var max = 1;
+    ORDER.forEach(function (k) { if ((counts[k] || 0) > max) { max = counts[k] || 0; } });
     var wrap = $("#legend");
     wrap.innerHTML = "";
     ORDER.forEach(function (key) {
       var r = REL[key];
       if (!r) { return; }
+      var n = counts[key] || 0;
       var b = document.createElement("button");
       b.type = "button";
       b.className = "legend-item";
       b.dataset.key = key;
-      b.innerHTML = '<span class="legend-swatch" style="background:' + r.color + '"></span>' +
+      b.style.setProperty("--c", r.color);
+      b.innerHTML = '<span class="legend-swatch"></span>' +
         '<span class="legend-name">' + esc(r.name) + "</span>" +
-        '<span class="legend-count">' + (counts[key] || 0) + " 国</span>";
+        '<span class="legend-stat"><i style="width:' + (n / max * 100).toFixed(1) + '%"></i>' +
+        "<b>" + n + "</b></span>";
       b.addEventListener("click", function () {
         var next = state.highlight === key ? null : key;
         if (next) { applyLayer("dominant"); }
@@ -191,8 +196,8 @@
       b.type = "button";
       b.className = "faith-chip";
       b.dataset.key = key;
-      b.innerHTML = '<i class="dot" style="background:' + REL[key].color + '"></i>' +
-        "<span>" + esc(REL[key].name) + "</span>";
+      b.style.setProperty("--c", REL[key].color);
+      b.innerHTML = '<i class="dot"></i><span>' + esc(REL[key].name) + "</span>";
       b.addEventListener("click", function () { setDensity(key); });
       wrap.appendChild(b);
     });

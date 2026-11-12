@@ -67,7 +67,10 @@
 
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-head">
-        <h2>图例</h2>
+        <div class="sh-title">
+          <h2>图例</h2>
+          <span class="sh-sub">LEGEND</span>
+        </div>
         <button class="icon-btn only-mobile" id="drawerClose" aria-label="关闭图例">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
         </button>
@@ -82,24 +85,27 @@
           <span>图层</span>
           <span class="block-hint">LAYERS</span>
         </div>
-        <button class="layer-card" id="layerDominant" type="button">
-          <span class="layer-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 9l9 6 9-6-9-6Z"/><path d="m3 15 9 6 9-6"/></svg>
-          </span>
-          <span class="layer-copy"><strong>主导宗教</strong><small>按信众比例着色</small></span>
-          <span class="layer-check">✓</span>
-        </button>
-        <div class="layer-sub" id="layerDensityGroup">
-          <span class="layer-sub-title">信众密度</span>
-          <div class="faith-chips" id="densityChips"></div>
+        <div class="layer-group">
+          <button class="layer-card" id="layerDominant" type="button">
+            <span class="layer-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 9l9 6 9-6-9-6Z"/><path d="m3 15 9 6 9-6"/></svg>
+            </span>
+            <span class="layer-copy"><strong>主导宗教</strong><small>按信众比例着色</small></span>
+            <span class="layer-check">✓</span>
+          </button>
+          <div class="layer-sub">
+            <span class="layer-sub-title">信众密度</span>
+            <div class="faith-chips" id="densityChips"></div>
+            <p class="layer-hint">开启后地图上会标出各国该宗教的占比</p>
+          </div>
+          <button class="layer-card" id="spreadBtn" type="button">
+            <span class="layer-icon spread">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg>
+            </span>
+            <span class="layer-copy"><strong>传播时间轴</strong><small>拖动时间看全球扩散</small></span>
+            <span class="layer-check">✓</span>
+          </button>
         </div>
-        <button class="layer-card" id="spreadBtn" type="button">
-          <span class="layer-icon spread">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg>
-          </span>
-          <span class="layer-copy"><strong>传播时间轴</strong><small>拖动时间看全球扩散</small></span>
-          <span class="layer-check">✓</span>
-        </button>
       </div>
 
       <div class="sidebar-block" id="regionBlock">

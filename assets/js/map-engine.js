@@ -681,8 +681,12 @@
     this._drawFlatLines();
     this._drawSpreadFlat(px, py);
     /* 传播模式下不画国名：事件标签更该被看见，两套标签叠在一起会糊成一片 */
-    if (!this.spread) { this._drawFlatLabels(px, py); }
-    this._drawMarkers(px, py, 0);
+    if (!this.spread) {
+      /* 密度层先画圆点再画占比：占比带底衬，压在圆点上也能看清 */
+      if (this.layer === "density") { this._drawMarkers(px, py, 0); }
+      this._drawFlatLabels(px, py);
+      if (this.layer !== "density") { this._drawMarkers(px, py, 0); }
+    }
 
     /* 边缘暗角 */
     var vg = ctx.createLinearGradient(0, 0, 0, h);
@@ -798,10 +802,23 @@
     ctx.stroke();
   };
 
+  /* 百分比文案：18.3% / 93% / 0.5% */
+  function fmtPctShort(v) {
+    if (v == null) { return ""; }
+    if (v >= 10) { return Math.round(v) + "%"; }
+    var s = v.toFixed(1);
+    if (s.indexOf(".0") > -1) { s = s.slice(0, -2); }
+    return s + "%";
+  }
+
   ReligionMap.prototype._drawFlatLabels = function (px, py) {
-    if (this.view.zoom < 1.25) { return; }
+    /* 信众密度图层：国名照旧，占比要看得见，
+       所以这一层允许比平时更小的比例尺。 */
+    var density = (this.layer === "density" && !this.spread) ? this.densityKey : null;
+    if (this.view.zoom < (density ? 0.9 : 1.25)) { return; }
     var ctx = this.ctx, w = this.width, h = this.height;
     var s = this.flatScale();
+    var dColor = density ? ((window.RELIGIONS || {})[density] || {}).color : null;
     var list = [];
     for (var i = 0; i < this.features.length; i++) {
       var f = this.features[i];
@@ -810,18 +827,37 @@
       if (bw < 26 || bh < 12) { continue; }
       var p = [px(f.center[0]), py(f.center[1])];
       if (p[0] < 10 || p[0] > w - 10 || p[1] < 10 || p[1] > h - 10) { continue; }
-      list.push({ f: f, x: p[0], y: p[1], score: bw * bh, big: bw > 180 && bh > 90 });
+      var pct = 0;
+      if (density && f.stats) { pct = f.stats.rel[density] || 0; }
+      var showPct = pct >= 0.5 && bw >= 38 && bh >= 26;
+      /* 密度层里只给特大国家写名字，否则整张地图全是国名 */
+      var showName = !density || showPct || (bw >= 110 && bh >= 50);
+      if (!showName && !showPct) { continue; }
+      list.push({
+        f: f, x: p[0], y: p[1], score: bw * bh,
+        big: bw > 180 && bh > 90,
+        pct: pct, showPct: showPct, showName: showName
+      });
     }
     list.sort(function (a, b) { return b.score - a.score; });
     var placed = [];
     var max = 70;
     for (var j = 0; j < list.length && j < max; j++) {
       var it = list[j];
-      var label = it.f.zh;
+      var label = it.showName ? it.f.zh : "";
       var fs = it.big ? 12 : 10.5;
+      var pfs = it.big ? 14 : 12;
+      var pctText = it.showPct ? fmtPctShort(it.pct) : null;
       ctx.font = "600 " + fs + 'px "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif';
-      var tw = ctx.measureText(label).width;
-      var rect = [it.x - tw / 2 - 3, it.y - fs, tw + 6, fs + 4];
+      var tw = label ? ctx.measureText(label).width : 0;
+      var pw = 0;
+      if (pctText) {
+        ctx.font = "700 " + pfs + 'px "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif';
+        pw = ctx.measureText(pctText).width;
+      }
+      var halfW = Math.max(tw, pw) / 2;
+      var top = it.y - (pctText ? fs * 0.55 : fs);
+      var rect = [it.x - halfW - 3, top - 2, halfW * 2 + 6, (pctText ? fs + pfs + 8 : fs + 4)];
       /* 文字放不下就整条不画：半截字既难看，也会压到地图工具按钮上 */
       if (rect[0] < 2 || rect[0] + rect[2] > w - 2 || rect[1] < 2 || rect[1] + rect[3] > h - 2) { continue; }
       var clash = false;
@@ -834,11 +870,34 @@
       placed.push(rect);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "rgba(5,10,16,.85)";
-      ctx.strokeText(label, it.x, it.y);
-      ctx.fillStyle = "rgba(235,232,222,.8)";
-      ctx.fillText(label, it.x, it.y);
+      if (label) {
+        ctx.font = "600 " + fs + 'px "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(5,10,16,.85)";
+        ctx.strokeText(label, it.x, it.y);
+        ctx.fillStyle = "rgba(235,232,222,.8)";
+        ctx.fillText(label, it.x, it.y);
+      }
+      if (pctText) {
+        var py2 = it.y + fs * 1.05;
+        ctx.font = "700 " + pfs + 'px "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif';
+        /* 底衬：占比常常压在浅色国土上，不加底衬就读不出来 */
+        var pw2 = ctx.measureText(pctText).width;
+        var plate = [it.x - pw2 / 2 - 5, py2 - pfs * 0.72, pw2 + 10, pfs * 1.44];
+        ctx.fillStyle = "rgba(8,12,18,.62)";
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(plate[0], plate[1], plate[2], plate[3], 4);
+          ctx.fill();
+        } else {
+          ctx.fillRect(plate[0], plate[1], plate[2], plate[3]);
+        }
+        ctx.lineWidth = 3.2;
+        ctx.strokeStyle = "rgba(5,10,16,.9)";
+        ctx.strokeText(pctText, it.x, py2);
+        ctx.fillStyle = dColor || "#fff";
+        ctx.fillText(pctText, it.x, py2);
+      }
     }
   };
 
@@ -1599,13 +1658,31 @@
     list.sort(function (a, b) { return b.score - a.score; });
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    var density = (this.layer === "density" && !this.spread) ? this.densityKey : null;
+    var dColor = density ? ((window.RELIGIONS || {})[density] || {}).color : null;
     for (var j = 0; j < list.length && j < 40; j++) {
       var it = list[j];
       var label = it.f.zh;
       var fs = it.score > 800 ? 12 : 10.5;
+      var pctText = "";
+      var pfs = 0;
+      if (density && it.f.stats) {
+        var pct = it.f.stats.rel[density] || 0;
+        if (pct >= 0.5 && it.score > 600) {
+          pctText = fmtPctShort(pct);
+          pfs = it.score > 1500 ? 13 : 11;
+        }
+      }
       ctx.font = "600 " + fs + 'px "PingFang SC","Microsoft YaHei",sans-serif';
       var tw = ctx.measureText(label).width;
-      var rect = [it.x - tw / 2 - 3, it.y - fs, tw + 6, fs + 4];
+      var pw = 0;
+      if (pctText) {
+        ctx.font = "700 " + pfs + 'px "PingFang SC","Microsoft YaHei",sans-serif';
+        pw = ctx.measureText(pctText).width;
+      }
+      var halfW = Math.max(tw, pw) / 2;
+      var top = it.y - (pctText ? fs * 0.55 : fs);
+      var rect = [it.x - halfW - 3, top - 2, halfW * 2 + 6, (pctText ? fs + pfs + 8 : fs + 4)];
       if (rect[0] < 0 || rect[1] < 0 || rect[0] + rect[2] > this.width || rect[1] + rect[3] > this.height) { continue; }
       var clash = false;
       for (var q = 0; q < placed.length; q++) {
@@ -1620,6 +1697,25 @@
       ctx.strokeText(label, it.x, it.y);
       ctx.fillStyle = "rgba(235,232,222,.78)";
       ctx.fillText(label, it.x, it.y);
+      if (pctText) {
+        var py2 = it.y + fs * 1.05;
+        ctx.font = "700 " + pfs + 'px "PingFang SC","Microsoft YaHei",sans-serif';
+        var pw2 = ctx.measureText(pctText).width;
+        var plate = [it.x - pw2 / 2 - 5, py2 - pfs * 0.72, pw2 + 10, pfs * 1.44];
+        ctx.fillStyle = "rgba(8,12,18,.62)";
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(plate[0], plate[1], plate[2], plate[3], 4);
+          ctx.fill();
+        } else {
+          ctx.fillRect(plate[0], plate[1], plate[2], plate[3]);
+        }
+        ctx.lineWidth = 3.2;
+        ctx.strokeStyle = "rgba(3,7,12,.95)";
+        ctx.strokeText(pctText, it.x, py2);
+        ctx.fillStyle = dColor || "#fff";
+        ctx.fillText(pctText, it.x, py2);
+      }
     }
   };
 
