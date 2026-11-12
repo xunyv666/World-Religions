@@ -107,11 +107,13 @@ node tools/check_religion.js   # 四大宗教专题、时间轴、传入年份�
 本项目用 **Git 集成**：Cloudflare 直接连 GitHub 仓库，`main` 一推送就重新
 构建上线，仓库里不需要放任何部署工作流（Direct Upload 才需要）。
 
+线上地址 <https://world-religions-555.pages.dev>。
+
 Dashboard 建项目时按下面填：
 
 | 字段 | 值 |
 |---|---|
-| Project name | `world-religions-map`（域名 `world-religions-map.pages.dev`；`world-religions` 已被别的项目占用） |
+| Project name | `world-religions`（线上域名 `world-religions-555.pages.dev`） |
 | Framework preset | None |
 | Build command | `python3 tools/build_dist.py \|\| python tools/build_dist.py` |
 | Build output directory | `dist` |
