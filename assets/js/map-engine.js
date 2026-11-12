@@ -17,11 +17,17 @@
     var n = parseInt(h, 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
-  function mix(hexA, hexB, t) {
+  function mixRgb(hexA, hexB, t) {
     var a = hexToRgb(hexA), b = hexToRgb(hexB);
-    return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * t) + "," +
-      Math.round(a[1] + (b[1] - a[1]) * t) + "," +
-      Math.round(a[2] + (b[2] - a[2]) * t) + ")";
+    return [
+      Math.round(a[0] + (b[0] - a[0]) * t),
+      Math.round(a[1] + (b[1] - a[1]) * t),
+      Math.round(a[2] + (b[2] - a[2]) * t)
+    ];
+  }
+  function mix(hexA, hexB, t) {
+    var c = mixRgb(hexA, hexB, t);
+    return "rgb(" + c[0] + "," + c[1] + "," + c[2] + ")";
   }
   function rgba(hex, alpha) {
     var c = hexToRgb(hex);
@@ -29,24 +35,39 @@
   }
 
   /* ---------- 配色 ---------- */
-  var TAO_STOPS = [
-    [0.00, "#151c25"],
-    [0.18, "#2a2a22"],
-    [0.40, "#5d4a1f"],
-    [0.62, "#9c7a2e"],
-    [0.82, "#d8b25f"],
-    [1.00, "#fff2c4"]
-  ];
-  function taoColor(vMillions) {
-    if (!vMillions || vMillions <= 0.0005) { return "#151c25"; }
-    var t = clamp((Math.log10(vMillions * 1000 + 1) - 0.9) / 3.6, 0, 1);
-    for (var i = 0; i < TAO_STOPS.length - 1; i++) {
-      var a = TAO_STOPS[i], b = TAO_STOPS[i + 1];
-      if (t >= a[0] && t <= b[0]) {
-        return mix(a[1], b[1], (t - a[0]) / (b[0] - a[0]));
-      }
-    }
-    return TAO_STOPS[TAO_STOPS.length - 1][1];
+  /* 信众密度色阶：同一个函数用于地图着色与图例渐变，
+     保证图例和地图永远是同一套颜色。t 取 0—1，0 为「几乎没有」。
+     四段式：底色 → 暗调 → 宗教本色 → 亮调。
+     中间两段压得比较暗，否则「差一个数量级」的国家看上去和密集区一样亮。 */
+  var DENSITY_BASE = "#151c25";
+  function lerpRgb(a, b, t) {
+    return [
+      a[0] + (b[0] - a[0]) * t,
+      a[1] + (b[1] - a[1]) * t,
+      a[2] + (b[2] - a[2]) * t
+    ];
+  }
+  function densityRamp(relColor) {
+    var base = hexToRgb(DENSITY_BASE);
+    var dark = mixRgb(DENSITY_BASE, relColor, 0.40);
+    var mid = mixRgb(DENSITY_BASE, relColor, 0.80);
+    var top = mixRgb(relColor, "#ffffff", 0.42);
+    return function (t) {
+      if (!(t > 0)) { return DENSITY_BASE; }
+      t = clamp(t, 0, 1);
+      var c;
+      if (t < 0.45) { c = lerpRgb(base, dark, t / 0.45); }
+      else if (t < 0.80) { c = lerpRgb(dark, mid, (t - 0.45) / 0.35); }
+      else { c = lerpRgb(mid, top, (t - 0.80) / 0.20); }
+      return "rgb(" + Math.round(c[0]) + "," + Math.round(c[1]) + "," + Math.round(c[2]) + ")";
+    };
+  }
+  /* 对数刻度：信众规模跨越几个数量级时，线性刻度会把小国全部压成同一种颜色 */
+  function densityT(v, maxV) {
+    if (!v || v <= 0) { return 0; }
+    var denom = Math.log10(1 + maxV * 1000);
+    if (denom <= 0) { return 0; }
+    return clamp(Math.log10(1 + v * 1000) / denom, 0, 1);
   }
 
   function pointInRings(lon, lat, rings) {
@@ -358,9 +379,17 @@
 
     this.mode = "flat";
     this.layer = "dominant";
+    this.densityKey = "tao";
     this.highlight = null;
     this.selected = null;
     this.hover = null;
+
+    /* 传播时间轴 */
+    this.spread = null;
+    this.spreadKey = null;
+    this.spreadYear = 0;
+    this.spreadClock = 0;
+    this.spreadArrival = (window.ARRIVAL || {});
 
     this.view = { lon: 8, lat: 12, zoom: 1 };
     this.rot = { lon: 16, lat: 18 };
@@ -368,7 +397,6 @@
     this.autoRotate = true;
 
     this.regions = (window.REGIONS || []).slice();
-    this.taoPlaces = (window.TAOISM && window.TAOISM.places) || [];
     this.lines = (window.MAP_LINES || []).slice();
 
     this.width = 0;
@@ -392,8 +420,20 @@
     requestAnimationFrame(this._loop);
   }
 
+  /* 信众密度层支持的宗教 */
+  var DENSITY_KEYS = ["tao", "bud", "chr", "isl"];
+
   ReligionMap.prototype._prepareColors = function () {
     this.dominantCounts = {};
+    /* 每个宗教一条色阶：底色统一，顶部用该宗教自己的颜色 */
+    this.densityRamps = {};
+    this.densityMax = {};
+    var self = this;
+    DENSITY_KEYS.forEach(function (k) {
+      var r = (window.RELIGIONS || {})[k];
+      self.densityRamps[k] = densityRamp(r ? r.color : "#8899aa");
+      self.densityMax[k] = 0;
+    });
     for (var i = 0; i < this.features.length; i++) {
       var f = this.features[i];
       var stats = f.stats;
@@ -405,14 +445,30 @@
       }
       f.dominant = best || "oth";
       f.color = (window.RELIGIONS[best] || window.RELIGIONS.oth).color;
-      f.taoValue = stats ? (stats.pop || 0) * ((stats.rel.tao || 0) / 100) : 0;
-      f.taoColor = taoColor(f.taoValue);
+      /* 信众数（万人）：人口 × 自报比例 */
+      f.followers = {};
+      for (var d = 0; d < DENSITY_KEYS.length; d++) {
+        var dk = DENSITY_KEYS[d];
+        var v = stats ? (stats.pop || 0) * ((stats.rel[dk] || 0) / 100) : 0;
+        f.followers[dk] = v;
+        if (v > this.densityMax[dk]) { this.densityMax[dk] = v; }
+      }
       this.dominantCounts[f.dominant] = (this.dominantCounts[f.dominant] || 0) + 1;
+    }
+    /* 色阶要在最大值确定后再算一次 */
+    for (var j = 0; j < this.features.length; j++) {
+      var ff = this.features[j];
+      ff.densityColors = {};
+      for (var d2 = 0; d2 < DENSITY_KEYS.length; d2++) {
+        var k2 = DENSITY_KEYS[d2];
+        ff.densityColors[k2] = this.densityRamps[k2](densityT(ff.followers[k2], this.densityMax[k2]));
+      }
     }
   };
 
   ReligionMap.prototype._currentColor = function (f) {
-    if (this.layer === "taoism") { return f.taoColor; }
+    if (this.spread) { return this._spreadColor(f); }
+    if (this.layer === "density") { return f.densityColors[this.densityKey] || DENSITY_BASE; }
     if (this.highlight && f.dominant !== this.highlight) {
       return mix(f.color, "#0a1017", 0.86);
     }
@@ -486,6 +542,12 @@
     this._lastTs = ts;
 
     var need = this.dirty;
+
+    if (this.spread) {
+      /* 传播动画靠时钟推进：粒子流动、波纹扩散 */
+      this.spreadClock += dt;
+      need = true;
+    }
 
     if (this.mode === "globe" && this.autoRotate &&
       !this.dragging && this.pointers.size === 0) {
@@ -617,7 +679,9 @@
     }
 
     this._drawFlatLines();
-    this._drawFlatLabels(px, py);
+    this._drawSpreadFlat(px, py);
+    /* 传播模式下不画国名：事件标签更该被看见，两套标签叠在一起会糊成一片 */
+    if (!this.spread) { this._drawFlatLabels(px, py); }
     this._drawMarkers(px, py, 0);
 
     /* 边缘暗角 */
@@ -780,9 +844,11 @@
 
   /* ---------- 标记点 ---------- */
   ReligionMap.prototype._markerList = function () {
-    if (this.layer === "taoism") {
-      return this.taoPlaces.map(function (p) {
-        return { kind: "tao", name: p.name, lat: p.lat, lon: p.lon, weight: p.followers || 1, data: p };
+    if (this.layer === "density") {
+      var info = (window.FAITH_DIST || {})[this.densityKey];
+      var places = (info && info.places) || [];
+      return places.map(function (p) {
+        return { kind: "faith", name: p.name, lat: p.lat, lon: p.lon, weight: p.followers || 1, data: p };
       });
     }
     return this.regions.map(function (r) {
@@ -791,10 +857,15 @@
   };
 
   ReligionMap.prototype._drawMarkers = function (px, py, mode) {
+    /* 传播模式下不画信众分布的圆点：事件图钉才是主角，
+       两套点叠在一起只会让人分不清哪个是哪个。 */
+    if (this.spread) { return; }
     var list = this._markerList();
     var ctx = this.ctx, w = this.width, h = this.height;
     var showLabels = this.view.zoom >= 2.6 || (this.mode === "globe" && this.globeZoom >= 2.1);
-    if (this.view.zoom < 1.9 && this.mode === "flat") { return; }
+    /* 信众分布层要在小比例尺下也能看见圆点，否则整张地图只有一片色阶 */
+    var minZoom = this.layer === "density" ? 1 : 1.9;
+    if (this.view.zoom < minZoom && this.mode === "flat") { return; }
     if (this.mode === "globe" && this.globeZoom < 1.45) { return; }
 
     for (var i = 0; i < list.length; i++) {
@@ -805,25 +876,27 @@
         if (pr[2] <= 0.02) { continue; }
         p = [this.gcx + this.R * pr[0], this.gcy - this.R * pr[1]];
       } else {
-        p = px(it.lon, it.lat);
+        /* px 只负责经度、py 只负责纬度，两个都要用 */
+        p = [px(it.lon), py(it.lat)];
       }
       if (p[0] < -40 || p[0] > w + 40 || p[1] < -40 || p[1] > h + 40) { continue; }
 
-      var gold = it.kind === "tao";
-      var baseR = gold ? clamp(2.2 + Math.log10((it.weight || 1) + 1) * 1.1, 2.6, 5.4) : 2.6;
+      var faith = it.kind === "faith";
+      var baseR = faith ? clamp(2 + Math.log10((it.weight || 1) + 1) * 1.05, 2.4, 4.8) : 2.6;
       var rr = baseR + 3.4;
+      var faithColor = faith ? ((window.RELIGIONS || {})[this.densityKey] || {}).color || "#d8b25f" : "#d8b25f";
 
       ctx.beginPath();
       ctx.arc(p[0], p[1], rr, 0, TAU);
-      ctx.fillStyle = gold ? "rgba(216,178,95,.13)" : "rgba(216,178,95,.10)";
+      ctx.fillStyle = faith ? rgba(faithColor, 0.16) : "rgba(216,178,95,.10)";
       ctx.fill();
 
       ctx.beginPath();
       ctx.arc(p[0], p[1], baseR, 0, TAU);
-      ctx.fillStyle = gold ? "#e9c977" : "#d8b25f";
+      ctx.fillStyle = faith ? faithColor : "#d8b25f";
       ctx.fill();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(10,15,22,.85)";
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = faith ? "rgba(255,255,255,.85)" : "rgba(10,15,22,.85)";
       ctx.stroke();
 
       if (showLabels) {
@@ -833,12 +906,377 @@
         ctx.lineWidth = 3;
         ctx.strokeStyle = "rgba(5,10,16,.9)";
         ctx.strokeText(it.name, p[0] + rr + 3, p[1]);
-        ctx.fillStyle = gold ? "rgba(240,217,164,.92)" : "rgba(230,226,214,.85)";
+        ctx.fillStyle = faith ? "rgba(240,235,220,.92)" : "rgba(230,226,214,.85)";
         ctx.fillText(it.name, p[0] + rr + 3, p[1]);
       }
       it._x = p[0];
       it._y = p[1];
     }
+  };
+
+  /* =======================================================
+     传播时间轴：把「某宗教在某年传到哪」画成动态地图
+     - 国家按传入年份依次点亮
+     - 传播路线画成流动的线，带行进中的粒子
+     - 关键事件落成图钉，附近年份高亮
+     ======================================================= */
+
+  ReligionMap.prototype.setSpread = function (key) {
+    var S = (window.SPREAD || {})[key] || null;
+    this.spread = S;
+    this.spreadKey = S ? key : null;
+    if (S) {
+      this.spreadYear = S.min;
+      this.spreadArrivalTable = (window.ARRIVAL || {})[key] || {};
+      this.spreadColor = hexToRgb(S.color || "#e8c97a");
+      this.spreadTop = mixRgb(S.color || "#e8c97a", "#ffffff", 0.45);
+    } else {
+      this.spreadArrivalTable = null;
+      this.spreadColor = null;
+      this.spreadTop = null;
+    }
+    this.dirty = true;
+  };
+
+  ReligionMap.prototype.setSpreadYear = function (y) {
+    this.spreadYear = y;
+    this.dirty = true;
+  };
+
+  /* 某国该宗教的传入年份（null 表示当地没有形成稳定社群） */
+  ReligionMap.prototype._arrivalOf = function (f) {
+    if (!this.spreadArrivalTable) { return null; }
+    var y = this.spreadArrivalTable[f.name];
+    return (y == null) ? null : y;
+  };
+
+  /* 传入越久颜色越饱满：新进入的国家偏暗，随时间推移变亮 */
+  ReligionMap.prototype._spreadColor = function (f) {
+    var y = this._arrivalOf(f);
+    if (y == null || y > this.spreadYear) { return "#242d3b"; }
+    var age = this.spreadYear - y;
+    var t = clamp(age / 120, 0, 1);
+    var a = this.spreadColor, b = this.spreadTop;
+    return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * t) + "," +
+      Math.round(a[1] + (b[1] - a[1]) * t) + "," +
+      Math.round(a[2] + (b[2] - a[2]) * t) + ")";
+  };
+
+  /* 刚刚传入的国家描一圈亮边，形成看得见的「传播锋面」 */
+  ReligionMap.prototype._drawSpreadWavefront = function () {
+    if (!this.spread) { return; }
+    var ctx = this.ctx;
+    var pulse = 0.55 + 0.45 * Math.sin(this.spreadClock * 0.0032);
+    var col = this.spread.color || "#e8c97a";
+    for (var i = 0; i < this.features.length; i++) {
+      var f = this.features[i];
+      var y = this._arrivalOf(f);
+      if (y == null || y > this.spreadYear) { continue; }
+      var age = this.spreadYear - y;
+      if (age > 90) { continue; }
+      var a = (1 - age / 90) * (0.35 + pulse * 0.45);
+      if (this.mode === "flat") {
+        ctx.beginPath();
+        if (!this._pathFlatFeature(ctx, f, true)) { continue; }
+        ctx.strokeStyle = rgba(col, a);
+        ctx.lineWidth = 1 + (1 - age / 90) * 1.6;
+        ctx.lineJoin = "round";
+        ctx.stroke();
+      } else {
+        this._strokeGlobeFeature(ctx, f, rgba(col, a), 1 + (1 - age / 90) * 1.4);
+      }
+    }
+  };
+
+  /* 折线按经度展开，跨日界线的段不会被拉成横贯全图的一条线 */
+  function unwrapPath(path) {
+    var out = [];
+    var prev = null;
+    for (var i = 0; i < path.length; i++) {
+      var lon = path[i][1];
+      if (prev != null) {
+        var d = lon - prev;
+        if (d > 180) { lon -= 360; }
+        else if (d < -180) { lon += 360; }
+      }
+      out.push([path[i][0], lon]);
+      prev = lon;
+    }
+    return out;
+  }
+
+  /* 平面视图：路线 + 粒子 */
+  ReligionMap.prototype._drawSpreadRoutes = function (px, py) {
+    var S = this.spread;
+    if (!S || !S.routes) { return; }
+    var ctx = this.ctx, w = this.width, h = this.height;
+    var year = this.spreadYear;
+    var col = S.color || "#e8c97a";
+    var clock = this.spreadClock;
+
+    ctx.save();
+    ctx.lineCap = "round";
+    for (var i = 0; i < S.routes.length; i++) {
+      var r = S.routes[i];
+      if (r.y > year) { continue; }
+      var age = year - r.y;
+      /* 越久远的路线越淡，最近发生的路线最亮 */
+      var alpha = clamp(0.85 - age / 420, 0.16, 0.85);
+      var pts = unwrapPath(r.path);
+      /* 路线底色 */
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1.1 + Math.min(2.2, age / 40);
+      ctx.strokeStyle = rgba(col, alpha * 0.55);
+      ctx.beginPath();
+      var started = false;
+      for (var k = 0; k < pts.length; k++) {
+        for (var off = -1; off <= 1; off++) {
+          var p = [px(pts[k][1] + off * 360), py(pts[k][0])];
+          if (p[0] < -80 || p[0] > w + 80) { continue; }
+          if (!started) { ctx.moveTo(p[0], p[1]); started = true; }
+          else { ctx.lineTo(p[0], p[1]); }
+        }
+      }
+      ctx.stroke();
+
+      /* 行进中的粒子：沿路线循环流动 */
+      if (pts.length < 2) { continue; }
+      var segLen = [];
+      var total = 0;
+      for (var s = 0; s < pts.length - 1; s++) {
+        var dx = (pts[s + 1][1] - pts[s][1]) * Math.cos(pts[s][0] * RAD);
+        var dy = pts[s + 1][0] - pts[s][0];
+        var L = Math.sqrt(dx * dx + dy * dy);
+        segLen.push(L); total += L;
+      }
+      if (total <= 0) { continue; }
+      var particles = 3;
+      for (var q = 0; q < particles; q++) {
+        var u = ((clock * 0.00011 * (60 / Math.max(1, total)) * 8) + q / particles + i * 0.13) % 1;
+        var dist = u * total, acc = 0, si = 0;
+        for (var s2 = 0; s2 < segLen.length; s2++) {
+          if (acc + segLen[s2] >= dist) { si = s2; break; }
+          acc += segLen[s2]; si = s2;
+        }
+        var f2 = segLen[si] > 0 ? (dist - acc) / segLen[si] : 0;
+        var lon = pts[si][1] + (pts[si + 1][1] - pts[si][1]) * f2;
+        var lat = pts[si][0] + (pts[si + 1][0] - pts[si][0]) * f2;
+        for (var off2 = -1; off2 <= 1; off2++) {
+          var pp = [px(lon + off2 * 360), py(lat)];
+          if (pp[0] < -30 || pp[0] > w + 30) { continue; }
+          var gr = ctx.createRadialGradient(pp[0], pp[1], 0, pp[0], pp[1], 7);
+          gr.addColorStop(0, rgba(col, 0.95));
+          gr.addColorStop(1, rgba(col, 0));
+          ctx.fillStyle = gr;
+          ctx.beginPath();
+          ctx.arc(pp[0], pp[1], 7, 0, TAU);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(pp[0], pp[1], 1.9, 0, TAU);
+          ctx.fillStyle = "#ffffff";
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+  };
+
+  /* 平面视图：事件图钉 + 扩散波纹 */
+  ReligionMap.prototype._drawSpreadEvents = function (px, py) {
+    var S = this.spread;
+    if (!S || !S.events) { return; }
+    var ctx = this.ctx, w = this.width, h = this.height;
+    var year = this.spreadYear;
+    var col = S.color || "#e8c97a";
+    var clock = this.spreadClock;
+    var zoom = this.view.zoom;
+
+    /* 发源地常亮 */
+    if (S.origin) {
+      var op = [px(S.origin.lon), py(S.origin.lat)];
+      var pulse = 0.5 + 0.5 * Math.sin(clock * 0.0022);
+      var orr = (12 + pulse * 7) * Math.min(2, zoom);
+      var g = ctx.createRadialGradient(op[0], op[1], 0, op[0], op[1], orr);
+      g.addColorStop(0, rgba(col, 0.4));
+      g.addColorStop(1, rgba(col, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(op[0], op[1], orr, 0, TAU);
+      ctx.fill();
+      /* 双环标记发源地 */
+      ctx.beginPath();
+      ctx.arc(op[0], op[1], 5 + pulse * 2, 0, TAU);
+      ctx.strokeStyle = rgba(col, 0.85);
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(op[0], op[1], 10 + pulse * 3, 0, TAU);
+      ctx.strokeStyle = rgba(col, 0.3);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    for (var i = 0; i < S.events.length; i++) {
+      var e = S.events[i];
+      if (e.y > year) { continue; }
+      var p = [px(e.lon), py(e.lat)];
+      if (p[0] < -40 || p[0] > w + 40 || p[1] < -40 || p[1] > h + 40) { continue; }
+      var age = year - e.y;
+      /* 波纹：事件发生后向外扩散，逐渐变淡 */
+      var life = clamp(1 - age / 170, 0, 1);
+      if (life > 0.02) {
+        var rr = (5 + (1 - life) * 30) * Math.min(1.8, Math.max(0.7, zoom * 0.55));
+        var g2 = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr);
+        g2.addColorStop(0, rgba(col, 0.22 * life));
+        g2.addColorStop(1, rgba(col, 0));
+        ctx.fillStyle = g2;
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], rr, 0, TAU);
+        ctx.fill();
+      }
+      /* 图钉 */
+      var fresh = clamp(1 - age / 90, 0, 1);
+      var rad = 3.4 + fresh * 2.2;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], rad + 3, 0, TAU);
+      ctx.fillStyle = rgba(col, 0.14 + fresh * 0.2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], rad, 0, TAU);
+      ctx.fillStyle = e.kind === "origin" ? "#fff6dc" : col;
+      ctx.fill();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(8,12,18,.85)";
+      ctx.stroke();
+    }
+  };
+
+  /* 平面视图：事件标签（只给最近的几个事件写字，避免糊成一片） */
+  ReligionMap.prototype._drawSpreadLabels = function (px, py) {
+    var S = this.spread;
+    if (!S || !S.events) { return; }
+    var ctx = this.ctx, w = this.width, h = this.height;
+    var year = this.spreadYear;
+    var zoom = this.view.zoom;
+    if (zoom < 1.05 && this.mode === "flat") { return; }
+    var col = S.color || "#e8c97a";
+    var placed = [];
+    var picked = [];
+    /* 取最近发生的 4 个事件做标注 */
+    for (var i = S.events.length - 1; i >= 0 && picked.length < 4; i--) {
+      var e = S.events[i];
+      if (e.y > year) { continue; }
+      picked.push(e);
+    }
+    picked.reverse();
+    ctx.font = '600 10.5px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    /* 发源地永远带名字 */
+    if (S.origin) {
+      var op = [px(S.origin.lon), py(S.origin.lat)];
+      var label0 = "发源地 · " + S.origin.label;
+      var tw0 = ctx.measureText(label0).width;
+      var rect0 = [op[0] + 14, op[1] - 9, tw0 + 10, 18];
+      if (rect0[0] + rect0[2] < w && rect0[1] > 0 && rect0[1] + rect0[3] < h) {
+        placed.push(rect0);
+        ctx.fillStyle = "rgba(8,12,18,.8)";
+        ctx.fillRect(rect0[0] - 4, rect0[1], rect0[2] + 4, rect0[3]);
+        ctx.fillStyle = "#fff6dc";
+        ctx.fillText(label0, op[0] + 11, op[1]);
+      }
+    }
+    for (var j = 0; j < picked.length; j++) {
+      var ev = picked[j];
+      var p = [px(ev.lon), py(ev.lat)];
+      if (p[0] < 0 || p[0] > w || p[1] < 0 || p[1] > h) { continue; }
+      var tw = ctx.measureText(ev.place).width;
+      var rect = [p[0] + 8, p[1] - 8, tw + 8, 16];
+      var clash = false;
+      for (var q = 0; q < placed.length; q++) {
+        var rr2 = placed[q];
+        if (rect[0] < rr2[0] + rr2[2] && rect[0] + rect[2] > rr2[0] &&
+          rect[1] < rr2[1] + rr2[3] && rect[1] + rect[3] > rr2[1]) { clash = true; break; }
+      }
+      if (clash) { continue; }
+      placed.push(rect);
+      ctx.fillStyle = "rgba(8,12,18,.72)";
+      ctx.fillRect(rect[0] - 3, rect[1], rect[2] + 3, rect[3]);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(5,10,16,.9)";
+      ctx.strokeText(ev.place, p[0] + 9, p[1]);
+      ctx.fillStyle = rgba(col, 0.95);
+      ctx.fillText(ev.place, p[0] + 9, p[1]);
+    }
+  };
+
+  ReligionMap.prototype._drawSpreadFlat = function (px, py) {
+    if (!this.spread) { return; }
+    this._drawSpreadWavefront();
+    this._drawSpreadRoutes(px, py);
+    this._drawSpreadEvents(px, py);
+    this._drawSpreadLabels(px, py);
+  };
+
+  /* 球面视图：只画朝向观察者的一侧 */
+  ReligionMap.prototype._drawSpreadGlobe = function () {
+    var S = this.spread;
+    if (!S) { return; }
+    var ctx = this.ctx;
+    var year = this.spreadYear;
+    var col = S.color || "#e8c97a";
+    var clock = this.spreadClock;
+    var self = this;
+
+    this._drawSpreadWavefront();
+    ctx.save();
+    /* 路线 */
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = rgba(col, 0.5);
+    for (var i = 0; i < (S.routes || []).length; i++) {
+      var r = S.routes[i];
+      if (r.y > year) { continue; }
+      var age = year - r.y;
+      ctx.strokeStyle = rgba(col, clamp(0.8 - age / 420, 0.14, 0.8) * 0.7);
+      var pts = unwrapPath(r.path);
+      var pen = false;
+      ctx.beginPath();
+      for (var k = 0; k < pts.length; k++) {
+        var pr = this.project(pts[k][0], pts[k][1]);
+        if (pr[2] <= 0.01) { pen = false; continue; }
+        var x = this.gcx + this.R * pr[0], y = this.gcy - this.R * pr[1];
+        if (!pen) { ctx.moveTo(x, y); pen = true; } else { ctx.lineTo(x, y); }
+      }
+      ctx.stroke();
+    }
+    /* 事件 */
+    for (var j = 0; j < S.events.length; j++) {
+      var e = S.events[j];
+      if (e.y > year) { continue; }
+      var p = this.project(e.lat, e.lon);
+      if (p[2] <= 0.02) { continue; }
+      var x2 = this.gcx + this.R * p[0], y2 = this.gcy - this.R * p[1];
+      var fresh = clamp(1 - (year - e.y) / 90, 0, 1);
+      var life = clamp(1 - (year - e.y) / 260, 0, 1);
+      if (life > 0.02) {
+        var rr = (6 + (1 - life) * 30) * (this.R / 220);
+        var g = ctx.createRadialGradient(x2, y2, 0, x2, y2, rr);
+        g.addColorStop(0, rgba(col, 0.3 * life));
+        g.addColorStop(1, rgba(col, 0));
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x2, y2, rr, 0, TAU);
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(x2, y2, 3 + fresh * 1.8, 0, TAU);
+      ctx.fillStyle = e.kind === "origin" ? "#fff6dc" : col;
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(8,12,18,.8)";
+      ctx.stroke();
+    }
+    ctx.restore();
   };
 
   /* ---------- 3D 地球 ---------- */
@@ -1003,8 +1441,9 @@
       this._strokeGlobeFeature(ctx, this.hover.feature, "rgba(255,255,255,.5)", 1);
     }
 
-    this._drawGlobeLabels(ctx, cx, cy, R);
+    if (!this.spread) { this._drawGlobeLabels(ctx, cx, cy, R); }
     this._drawGlobeLines();
+    this._drawSpreadGlobe();
     this._drawMarkers(function (lon, lat) {
       var p = self.project(lat, lon);
       return [cx + R * p[0], cy - R * p[1]];
@@ -1186,7 +1625,8 @@
 
   /* ---------- 命中检测 ---------- */
   ReligionMap.prototype.markerAt = function (x, y) {
-    if (this.mode === "flat" && this.view.zoom < 1.9) { return null; }
+    var minZoom = this.layer === "density" ? 1 : 1.9;
+    if (this.mode === "flat" && this.view.zoom < minZoom) { return null; }
     if (this.mode === "globe" && this.globeZoom < 1.45) { return null; }
     var list = this._markerList();
     var best = null, bd = 15 * 15;
@@ -1232,6 +1672,7 @@
   ReligionMap.prototype.hit = function (x, y) {
     var m = this.markerAt(x, y);
     if (m) {
+      if (m.kind === "faith") { return { type: "faith-place", place: m.data, x: x, y: y }; }
       if (m.kind === "tao") { return { type: "tao-place", place: m.data, x: x, y: y }; }
       return { type: "region", region: m.data, x: x, y: y };
     }
@@ -1443,6 +1884,26 @@
     this.dirty = true;
   };
 
+  ReligionMap.prototype.setDensity = function (key) {
+    if (!key) { return; }
+    this.densityKey = key;
+    this.layer = "density";
+    this.hover = null;
+    this.dirty = true;
+  };
+
+  /* 图例渐变由色阶函数直接生成，保证图例和地图永远一致 */
+  ReligionMap.prototype.densityGradient = function (key) {
+    var ramp = this.densityRamps && this.densityRamps[key];
+    if (!ramp) { return ""; }
+    var stops = [];
+    for (var i = 0; i <= 12; i++) {
+      var t = i / 12;
+      stops.push(ramp(t) + " " + Math.round(t * 100) + "%");
+    }
+    return "linear-gradient(90deg," + stops.join(",") + ")";
+  };
+
   ReligionMap.prototype.setHighlight = function (religion) {
     this.highlight = religion;
     this.dirty = true;
@@ -1477,6 +1938,45 @@
     this.selected = name;
     this.dirty = true;
     return true;
+  };
+
+  ReligionMap.prototype.focusFaith = function (key) {
+    /* 把地图移到该宗教信众的重心，
+       否则分布在东亚或中东的信众会落在视野之外。 */
+    var stats = window.COUNTRY_STATS || {};
+    var sx = 0, sy = 0, sz = 0, sw = 0;
+    for (var i = 0; i < this.features.length; i++) {
+      var f = this.features[i];
+      var st = stats[f.name];
+      if (!st) { continue; }
+      var v = (st.pop || 0) * ((st.rel[key] || 0) / 100);
+      if (!(v > 0)) { continue; }
+      var lon = (f.bbox[0] + f.bbox[2]) / 2;
+      var lat = (f.bbox[1] + f.bbox[3]) / 2;
+      var la = lat * RAD, lo = lon * RAD;
+      sx += Math.cos(la) * Math.cos(lo) * v;
+      sy += Math.sin(la) * v;
+      sz += Math.cos(la) * Math.sin(lo) * v;
+      sw += v;
+    }
+    if (!(sw > 0)) { return false; }
+    var clon = Math.atan2(sz / sw, sx / sw) * DEG;
+    var clat = Math.atan2(sy / sw, Math.sqrt((sx / sw) * (sx / sw) + (sz / sw) * (sz / sw))) * DEG;
+    this._flyTo(clat, clon, 1.15);
+    return true;
+  };
+
+  ReligionMap.prototype._flyTo = function (lat, lon, zoom) {
+    if (this.mode === "flat") {
+      this.view.lon = normalizeLon(lon);
+      this.view.lat = clamp(lat, -78, 78);
+      this.view.zoom = clamp(zoom || this.view.zoom, 1, 14);
+    } else {
+      this.rot.lon = normalizeLon(lon);
+      this.rot.lat = clamp(lat, -72, 72);
+      this.globeZoom = Math.max(this.globeZoom, 1.6);
+    }
+    this.dirty = true;
   };
 
   ReligionMap.prototype.focusRegion = function (lat, lon) {

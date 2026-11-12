@@ -48,7 +48,7 @@
   add("Brunei", "文莱", 0.45, { isl: 82, bud: 8, chr: 8, oth: 2 });
   add("Cambodia", "柬埔寨", 16.8, { bud: 95, isl: 3, chr: 1, oth: 1 });
   add("China", "中国", 1437, { irr: 41.6, folk: 32, bud: 18.3, chr: 2.5, isl: 1.8, tao: 1.2, oth: 2.5, hin: 0.1 },
-    { note: "官方无全国宗教人口统计。无宗教比例与民间信仰规模在不同调查中差异很大；道教徒若计入民间宗教实践者，数量将远高于自报口径。人口含台湾地区，各项比例按台湾地区统计并入后重新加权。" });
+    { note: "官方无全国宗教人口统计。无宗教比例与民间信仰规模在不同调查中差异很大；道教徒若计入民间宗教实践者，数量将远高于自报口径。人口含中国台湾地区，各项比例按中国台湾地区统计并入后重新加权。" });
   add("Cyprus", "塞浦路斯", 1.6, { chr: 54.8, isl: 43.5, oth: 1.7 },
     { note: "全岛按统一口径统计，含北部地区。" });
   add("East Timor", "东帝汶", 1.3, { chr: 99.5, oth: 0.5 });
@@ -239,7 +239,7 @@
 
   /* ---------- 领土归属 ---------- */
   /* 地图底图已换成中国口径的世界地图数据源（见 assets/js/world-geo.js 的 WORLD_GEO_META）：
-     台湾、藏南按中国主张线划入中国，南海诸岛列入中国名下。
+     中国台湾、藏南按中国主张线划入中国，南海诸岛列入中国名下。
      这里的归属表是兜底：万一换回别的底图，引擎仍会按这里的规则重排多边形。 */
   window.TERRITORY = {
     /* 多边形并入：宿主国家 -> 被并入的国家 */
@@ -262,8 +262,8 @@
     { y: "4—9 世纪", t: "佛教达到鼎盛；唐代皇室尊老子为始祖，道教地位显赫，宫观制度完备。" },
     { y: "7—14 世纪", t: "伊斯兰教随阿拉伯、波斯商人由海陆两路传入，元明时期形成回族等穆斯林群体。" },
     { y: "16—20 世纪", t: "天主教、新教随传教士来华；民间信仰与三教合一深入乡土社会。" },
-    { y: "17 世纪起", t: "闽粤移民东渡与下南洋，把妈祖、关帝、保生大帝等信仰带进台湾地区与海外华人聚落，宫庙网络随移民建立。" },
-    { y: "当代", t: "五大宗教并存。无宗教人口约占四成，民间信仰与道教实践的真实规模仍难以精确统计；台湾地区宫庙密度居世界前列。" }
+    { y: "17 世纪起", t: "闽粤移民东渡与下南洋，把妈祖、关帝、保生大帝等信仰带进中国台湾与海外华人聚落，宫庙网络随移民建立。" },
+    { y: "当代", t: "五大宗教并存。无宗教人口约占四成，民间信仰与道教实践的真实规模仍难以精确统计；中国台湾地区宫庙密度居世界前列。" }
   ]);
 
   hist("Japan", [
@@ -1071,10 +1071,10 @@
     R.push({ id: id, name: name, nameEn: en, country: country, lat: lat, lon: lon, rel: rel, note: note, history: history || null });
   }
 
-  reg("hk", "香港", "Hong Kong", "China", 22.32, 114.17,
+  reg("hk", "中国香港", "Hong Kong, China", "China", 22.32, 114.17,
     { bud: 35, folk: 30, chr: 12, irr: 18, tao: 2, oth: 3 },
     "黄大仙祠、蓬瀛仙馆等道场活跃；佛道与民间信仰高度交织，教堂与清真寺并存。");
-  reg("mo", "澳门", "Macau", "China", 22.20, 113.54,
+  reg("mo", "中国澳门", "Macao, China", "China", 22.20, 113.54,
     { folk: 40, bud: 25, irr: 24, chr: 7, tao: 2, oth: 2 },
     "妈阁庙、大三巴与哪吒庙比邻而居，是华洋宗教共处的典型城市。");
   reg("sg", "新加坡", "Singapore", "—", 1.35, 103.82,
@@ -1206,48 +1206,216 @@
 
   window.REGIONS = R;
 
-  /* ---------- 道教专题 ---------- */
-  window.TAOISM = {
-    intro: "道教是中国本土宗教，以「道」为最高信仰，尊老子为教祖，奉《道德经》为根本经典。它既是一套哲学，也是一套仪式、修炼与社群组织。",
-    stats: [
-      { label: "自报道教徒", value: "约 1,200 万—2,000 万", sub: "全球，口径差异较大" },
-      { label: "华人社会实践者", value: "数亿人", sub: "含民间信仰与仪式参与" },
-      { label: "主要传统", value: "全真 / 正一", sub: "出家清修 / 居家符箓" }
-    ],
-    history: [
-      { y: "前 4 世纪", t: "老子、庄子思想形成道家哲学；《道德经》《庄子》奠定「道」的宇宙论。" },
-      { y: "142 年", t: "张道陵在蜀地创立五斗米道，以《道德经》为经典，建立教团与治所，道教正式成形。" },
-      { y: "4—6 世纪", t: "上清、灵宝、天师道等经系发展；寇谦之、陆修静整理斋醮仪轨。" },
-      { y: "7—9 世纪", t: "唐代尊老子为始祖，道教成为皇室宗教；宫观制度与炼丹术兴盛。" },
-      { y: "10—13 世纪", t: "宋代内丹学兴起；金元之际王重阳创全真教，主张三教合一、出家清修。" },
-      { y: "13—17 世纪", t: "正一派统领符箓传统；明代《道藏》编纂，宫观体系遍及全国。" },
-      { y: "17—20 世纪", t: "清代与近代社会变迁中道教衰落，宫观减少；民间信仰继续承载道教仪式。" },
-      { y: "当代", t: "中国大陆道教协会恢复活动；台湾、香港、东南亚华人社群保持活跃宫庙网络。" }
-    ],
-    places: [
-      { name: "中国", en: "China", country: "China", lat: 34.5, lon: 104.0, followers: 12000, note: "自报道教徒约 1,200 万，若计入民间信仰实践者规模更大；全真与正一宫观遍布各地。" },
-      { name: "台湾", en: "Taiwan", country: "China", lat: 23.7, lon: 120.9, followers: 350, note: "道教与民间信仰高度融合，宫庙密度极高，正一派道士主持斋醮。" },
-      { name: "香港", en: "Hong Kong", country: "China", lat: 22.32, lon: 114.17, followers: 200, note: "黄大仙祠、蓬瀛仙馆、青松观等道场活跃，信众与民间信仰交织。" },
-      { name: "澳门", en: "Macau", country: "China", lat: 22.20, lon: 113.54, followers: 30, note: "妈阁庙、哪吒庙等与道教仪式关系密切。" },
-      { name: "新加坡", en: "Singapore", country: "—", lat: 1.35, lon: 103.82, followers: 60, note: "华人庙宇多由道教与民间信仰共同维系，城隍庙香火鼎盛。" },
-      { name: "马来西亚", en: "Malaysia", country: "Malaysia", lat: 3.14, lon: 101.69, followers: 50, note: "槟城、吉隆坡的华人宫庙保留道教醮仪与九皇爷信仰。" },
-      { name: "印度尼西亚", en: "Indonesia", country: "Indonesia", lat: -6.2, lon: 106.85, followers: 30, note: "华人社群庙宇与三教传统并存，宗教身份登记复杂。" },
-      { name: "泰国", en: "Thailand", country: "Thailand", lat: 13.75, lon: 100.50, followers: 25, note: "华人社区的道教宫庙与泰式佛教仪式互相影响。" },
-      { name: "越南", en: "Vietnam", country: "Vietnam", lat: 21.03, lon: 105.85, followers: 20, note: "道教与祖先崇拜、母神信仰融合，三教传统深厚。" },
-      { name: "韩国", en: "South Korea", country: "South Korea", lat: 37.57, lon: 126.98, followers: 15, note: "道教影响体现在风水、丹学与民间仪式中，独立教团规模较小。" },
-      { name: "日本", en: "Japan", country: "Japan", lat: 35.68, lon: 139.69, followers: 10, note: "道教方术影响阴阳道与修验道，但未形成独立教团。" },
-      { name: "美国", en: "United States", country: "United States of America", lat: 37.7, lon: -122.2, followers: 30, note: "华人移民与西方修行者共同构成道观与内丹社团网络。" },
-      { name: "加拿大", en: "Canada", country: "Canada", lat: 43.65, lon: -79.38, followers: 10, note: "多伦多、温哥华华人社区有道观与道教文化团体。" },
-      { name: "澳大利亚", en: "Australia", country: "Australia", lat: -33.87, lon: 151.21, followers: 8, note: "悉尼、墨尔本华人庙宇与道教节庆活跃。" },
-      { name: "英国", en: "United Kingdom", country: "United Kingdom", lat: 51.50, lon: -0.12, followers: 7, note: "伦敦华人社区与西方道教修行团体并存。" },
-      { name: "法国", en: "France", country: "France", lat: 48.85, lon: 2.35, followers: 5, note: "巴黎华人社群与汉学、气功修行圈子推动道教传播。" },
-      { name: "巴西", en: "Brazil", country: "Brazil", lat: -23.55, lon: -46.63, followers: 3, note: "华人移民与新时代灵性运动带来道教元素。" },
-      { name: "秘鲁", en: "Peru", country: "Peru", lat: -12.05, lon: -77.04, followers: 2, note: "利马华人社区保留庙宇与节庆传统。" },
-      { name: "阿根廷", en: "Argentina", country: "Argentina", lat: -34.60, lon: -58.38, followers: 2, note: "布宜诺斯艾利斯华人社区有道观与文化活动。" },
-      { name: "新西兰", en: "New Zealand", country: "New Zealand", lat: -36.85, lon: 174.76, followers: 2, note: "奥克兰华人社区庙宇与道教节庆。" }
-    ],
-    note: "道教与民间信仰、佛教仪式高度交织，很多信众并不以「道教徒」自我标识。上表为研究机构的粗略估算，仅用于呈现分布格局，不应视为精确统计。"
+  /* ---------- 四大宗教 · 信众分布专题 ---------- */
+  /* followers 单位为「千人」；国家层面的着色则统一按「人口 × 自报比例」估算，
+     两套口径在注释里说明，避免读者把专题数字与地图色阶当成同一回事。 */
+  window.FAITH_DIST = {
+
+    /* ==================== 道教 ==================== */
+    tao: {
+      key: "tao",
+      title: "道教分布",
+      en: "DAOISM · TAOISM",
+      unit: "千人",
+      intro: "道教是中国本土宗教，以「道」为最高信仰，尊老子为教祖，奉《道德经》为根本经典。它既是一套哲学，也是一套仪式、修炼与社群组织。",
+      stats: [
+        { label: "自报道教徒", value: "约 1,200 万—2,000 万", sub: "全球，口径差异较大" },
+        { label: "华人社会实践者", value: "数亿人", sub: "含民间信仰与仪式参与" },
+        { label: "主要传统", value: "全真 / 正一", sub: "出家清修 / 居家符箓" }
+      ],
+      history: [
+        { y: "前 4 世纪", t: "老子、庄子思想形成道家哲学；《道德经》《庄子》奠定「道」的宇宙论。" },
+        { y: "142 年", t: "张道陵在蜀地创立五斗米道，以《道德经》为经典，建立教团与治所，道教正式成形。" },
+        { y: "4—6 世纪", t: "上清、灵宝、天师道等经系发展；寇谦之、陆修静整理斋醮仪轨。" },
+        { y: "7—9 世纪", t: "唐代尊老子为始祖，道教成为皇室宗教；宫观制度与炼丹术兴盛。" },
+        { y: "10—13 世纪", t: "宋代内丹学兴起；金元之际王重阳创全真教，主张三教合一、出家清修。" },
+        { y: "13—17 世纪", t: "正一派统领符箓传统；明代《道藏》编纂，宫观体系遍及全国。" },
+        { y: "17—20 世纪", t: "清代与近代社会变迁中道教衰落，宫观减少；民间信仰继续承载道教仪式。" },
+        { y: "当代", t: "中国大陆道教协会恢复活动；中国台湾、中国香港、东南亚华人社群保持活跃宫庙网络。" }
+      ],
+      places: [
+        { name: "中国", en: "China", country: "China", lat: 34.5, lon: 104.0, followers: 12000, note: "自报道教徒约 1,200 万，若计入民间信仰实践者规模更大；全真与正一宫观遍布各地。" },
+        { name: "中国台湾", en: "Taiwan, China", country: "China", lat: 23.7, lon: 120.9, followers: 350, note: "道教与民间信仰高度融合，宫庙密度极高，正一派道士主持斋醮。" },
+        { name: "中国香港", en: "Hong Kong, China", country: "China", lat: 22.32, lon: 114.17, followers: 200, note: "黄大仙祠、蓬瀛仙馆、青松观等道场活跃，信众与民间信仰交织。" },
+        { name: "中国澳门", en: "Macao, China", country: "China", lat: 22.20, lon: 113.54, followers: 30, note: "妈阁庙、哪吒庙等与道教仪式关系密切。" },
+        { name: "新加坡", en: "Singapore", country: "Singapore", lat: 1.35, lon: 103.82, followers: 60, note: "华人庙宇多由道教与民间信仰共同维系，城隍庙香火鼎盛。" },
+        { name: "马来西亚", en: "Malaysia", country: "Malaysia", lat: 3.14, lon: 101.69, followers: 50, note: "槟城、吉隆坡的华人宫庙保留道教醮仪与九皇爷信仰。" },
+        { name: "印度尼西亚", en: "Indonesia", country: "Indonesia", lat: -6.2, lon: 106.85, followers: 30, note: "华人社群庙宇与三教传统并存，宗教身份登记复杂。" },
+        { name: "泰国", en: "Thailand", country: "Thailand", lat: 13.75, lon: 100.50, followers: 25, note: "华人社区的道教宫庙与泰式佛教仪式互相影响。" },
+        { name: "越南", en: "Vietnam", country: "Vietnam", lat: 21.03, lon: 105.85, followers: 20, note: "道教与祖先崇拜、母神信仰融合，三教传统深厚。" },
+        { name: "韩国", en: "South Korea", country: "South Korea", lat: 37.57, lon: 126.98, followers: 15, note: "道教影响体现在风水、丹学与民间仪式中，独立教团规模较小。" },
+        { name: "日本", en: "Japan", country: "Japan", lat: 35.68, lon: 139.69, followers: 10, note: "道教方术影响阴阳道与修验道，但未形成独立教团。" },
+        { name: "美国", en: "United States", country: "United States of America", lat: 37.7, lon: -122.2, followers: 30, note: "华人移民与西方修行者共同构成道观与内丹社团网络。" },
+        { name: "加拿大", en: "Canada", country: "Canada", lat: 43.65, lon: -79.38, followers: 10, note: "多伦多、温哥华华人社区有道观与道教文化团体。" },
+        { name: "澳大利亚", en: "Australia", country: "Australia", lat: -33.87, lon: 151.21, followers: 8, note: "悉尼、墨尔本华人庙宇与道教节庆活跃。" },
+        { name: "英国", en: "United Kingdom", country: "United Kingdom", lat: 51.50, lon: -0.12, followers: 7, note: "伦敦华人社区与西方道教修行团体并存。" },
+        { name: "法国", en: "France", country: "France", lat: 48.85, lon: 2.35, followers: 5, note: "巴黎华人社群与汉学、气功修行圈子推动道教传播。" },
+        { name: "巴西", en: "Brazil", country: "Brazil", lat: -23.55, lon: -46.63, followers: 3, note: "华人移民与新时代灵性运动带来道教元素。" },
+        { name: "秘鲁", en: "Peru", country: "Peru", lat: -12.05, lon: -77.04, followers: 2, note: "利马华人社区保留庙宇与节庆传统。" },
+        { name: "阿根廷", en: "Argentina", country: "Argentina", lat: -34.60, lon: -58.38, followers: 2, note: "布宜诺斯艾利斯华人社区有道观与文化活动。" },
+        { name: "新西兰", en: "New Zealand", country: "New Zealand", lat: -36.85, lon: 174.76, followers: 2, note: "奥克兰华人社区庙宇与道教节庆。" }
+      ],
+      note: "道教与民间信仰、佛教仪式高度交织，很多信众并不以「道教徒」自我标识。上表为研究机构的粗略估算，仅用于呈现分布格局，不应视为精确统计。"
+    },
+
+    /* ==================== 佛教 ==================== */
+    bud: {
+      key: "bud",
+      title: "佛教分布",
+      en: "BUDDHISM",
+      unit: "千人",
+      intro: "佛教由释迦牟尼创立于印度次大陆，分南传、汉传、藏传三大体系。传播路线横跨亚洲全部三种文明区，并在近代随移民与传教进入欧美。",
+      stats: [
+        { label: "全球信徒", value: "约 5 亿", sub: "含汉传与藏传信众" },
+        { label: "三大体系", value: "汉传 / 南传 / 藏传", sub: "另有韩传、越南传等支系" },
+        { label: "发源地", value: "古印度 · 摩揭陀", sub: "公元前 6 世纪" }
+      ],
+      history: [
+        { y: "前 6 世纪", t: "释迦牟尼在菩提伽耶悟道、在鹿野苑初转法轮，佛教诞生于摩揭陀国。" },
+        { y: "前 3 世纪", t: "阿育王统一南亚，遣使传法斯里兰卡与中亚，佛教第一次走出印度。" },
+        { y: "公元 1 世纪", t: "佛教经丝绸之路传入中国，白马寺建成；汉地译经与高僧西行同时展开。" },
+        { y: "3—6 世纪", t: "印度本土佛教衰微，佛教重心转到汉地与朝鲜半岛，六朝时期译经鼎盛。" },
+        { y: "7 世纪", t: "吐蕃王朝迎请佛教，藏传佛教体系在拉萨成形；尼泊尔成为汉藏之间的中转。" },
+        { y: "7—8 世纪", t: "玄奘西行取经归国；日本遣唐使把佛教、寺院的完整制度带回日本。" },
+        { y: "9—13 世纪", t: "东南亚佛教国教化：蒲甘、吴哥、室利佛逝相继崛起；密教与藏传西传。" },
+        { y: "13—14 世纪", t: "蒙古西征把藏传佛教带入蒙古高原与中亚，形成草原上的佛教势力。" },
+        { y: "16—19 世纪", t: "佛教随华工与传教士进入美洲、欧洲，现代主义与净土宗在海外落地生根。" },
+        { y: "20 世纪", t: "斯里兰卡、缅甸、越南的佛教民族主义兴起；禅宗与创价学会在日本扎根。" }
+      ],
+      places: [
+        { name: "中国", en: "China", country: "China", lat: 34.5, lon: 104.0, followers: 280000, note: "汉传佛教信众最多，藏传佛教集中在西藏、青海、川西；寺院与居士团体并立。" },
+        { name: "泰国", en: "Thailand", country: "Thailand", lat: 15.5, lon: 101.0, followers: 68000, note: "上座部佛教国教，僧团与国家制度结合紧密，都市寺院即社区中心。" },
+        { name: "缅甸", en: "Myanmar", country: "Myanmar", lat: 21.0, lon: 96.0, followers: 38000, note: "蒲甘起家的上座部传统，僧团政治在近现代深刻影响国家。" },
+        { name: "日本", en: "Japan", country: "Japan", lat: 35.7, lon: 139.7, followers: 46000, note: "神佛习合背景下寺院遍布国土，真言宗与日莲宗信众规模突出。" },
+        { name: "越南", en: "Vietnam", country: "Vietnam", lat: 21.0, lon: 105.8, followers: 30000, note: "大乘佛教与民间信仰长期共存，1959 年后形成统一的大乘佛教宗派体系。" },
+        { name: "韩国", en: "South Korea", country: "South Korea", lat: 36.0, lon: 127.8, followers: 8000, note: "以禅宗为主，新兴宗教与教团化经营深刻影响其宗教生态。" },
+        { name: "印度尼西亚", en: "Indonesia", country: "Indonesia", lat: -2.0, lon: 118.0, followers: 9000, note: "苏门答腊、加里曼丹的佛教社群与爪哇的印度教—佛教传统并存。" },
+        { name: "柬埔寨", en: "Cambodia", country: "Cambodia", lat: 12.6, lon: 104.9, followers: 15000, note: "吴哥王朝的宗教遗产仍在今日的僧团与村社生活中延续。" },
+        { name: "斯里兰卡", en: "Sri Lanka", country: "Sri Lanka", lat: 7.3, lon: 80.7, followers: 15000, note: "上座部佛教与僧伽罗民族主义相互塑造，殖民时期得以复兴。" },
+        { name: "马来西亚", en: "Malaysia", country: "Malaysia", lat: 4.2, lon: 102.0, followers: 5000, note: "马来半岛北岸与半岛中部华人社群的汉传佛教信众较集中。" },
+        { name: "印度", en: "India", country: "India", lat: 22.5, lon: 79.0, followers: 10000, note: "佛教在印度几近消亡，仅存藏传边缘地区与耆那教等邻近传统。" },
+        { name: "尼泊尔", en: "Nepal", country: "Nepal", lat: 27.7, lon: 85.3, followers: 3000, note: "喜马拉雅南坡佛塔与寺院密集，是藏传佛教与南传佛教的交汇地。" },
+        { name: "不丹", en: "Bhutan", country: "Bhutan", lat: 27.5, lon: 90.5, followers: 500, note: "噶举派寺院之国，传统与现代教育长期并存。" },
+        { name: "蒙古", en: "Mongolia", country: "Mongolia", lat: 47.9, lon: 106.9, followers: 2000, note: "17 世纪起藏传佛教传入，蒙古族几乎全数信仰藏传佛教。" },
+        { name: "老挝", en: "Laos", country: "Laos", lat: 18.0, lon: 103.0, followers: 3000, note: "上座部佛教与万物有灵信仰交叠，是中南半岛的佛教比例最高国家之一。" },
+        { name: "孟加拉国", en: "Bangladesh", country: "Bangladesh", lat: 23.7, lon: 90.4, followers: 8000, note: "佛教徒集中在东南部乔格巴拉邦与吉大哈地区。" },
+        { name: "中国台湾", en: "Taiwan, China", country: "China", lat: 23.7, lon: 120.9, followers: 6000, note: "汉传佛教与民间信仰高度融合，寺院密度与信众参与度都很高。" },
+        { name: "中国香港", en: "Hong Kong, China", country: "China", lat: 22.32, lon: 114.17, followers: 800, note: "寺院道场与都市生活并存，佛教团体在慈善与教育中作用明显。" },
+        { name: "中国澳门", en: "Macao, China", country: "China", lat: 22.20, lon: 113.54, followers: 25, note: "普济禅院等汉传寺院与华洋宗教社群长期共处。" },
+        { name: "菲律宾", en: "Philippines", country: "Philippines", lat: 12.9, lon: 121.8, followers: 6000, note: "菲律宾佛教徒规模居东南亚前列，英语教育与传教传统影响深远。" },
+        { name: "美国", en: "United States", country: "United States of America", lat: 37.8, lon: -122.4, followers: 2500, note: "日本创价学会、净土真宗与藏传佛教禅修中心构成主要群体。" },
+        { name: "欧洲", en: "Europe", country: "—", lat: 48.0, lon: 12.0, followers: 1200, note: "以藏传佛教与禅修团体为主，多为移民与战后归来的东方信众。" }
+      ],
+      note: "佛教信众统计口径差异极大：汉传地区常把烧香拜佛的民间实践者计入，泰国、缅甸则按寺院登记人口统计。数字仅用于呈现分布格局。"
+    },
+
+    /* ==================== 基督教 ==================== */
+    chr: {
+      key: "chr",
+      title: "基督教分布",
+      en: "CHRISTIANITY",
+      unit: "千人",
+      intro: "基督教发源于犹太地区，1 世纪起在罗马帝国行省传播，4 世纪成为帝国国教。此后经历东西教会分裂、宗教改革、殖民扩张与传教运动，成为覆盖全球的宗教。",
+      stats: [
+        { label: "全球信徒", value: "约 23.8 亿", sub: "占世界人口约三成" },
+        { label: "三大板块", value: "天主教 / 新教 / 东正教", sub: "另有众多独立教会" },
+        { label: "发源地", value: "犹太地区 · 加利利", sub: "公元 1 世纪" }
+      ],
+      history: [
+        { y: "公元 1 世纪", t: "拿撒勒的耶稣在加利利传道，福音在犹太与撒马利亚地区传开。" },
+        { y: "1—4 世纪", t: "信仰沿罗马帝国行省扩散，安提阿、亚历山大、罗马成为早期教会中心。" },
+        { y: "313—325 年", t: "君士坦丁皈依，尼西亚公会议召开，基督教由受迫害信仰转为帝国国教。" },
+        { y: "4—7 世纪", t: "埃塞俄比亚、高加索与爱尔兰相继基督教化，修道院传统兴起。" },
+        { y: "8—11 世纪", t: "加洛林与罗斯受洗，中欧、东欧、斯堪的纳维亚相继皈依；东西教会渐行渐远。" },
+        { y: "13—15 世纪", t: "东西方大分裂；天主教向中亚、蒙古与非洲海岸扩展，方济各与多明我会深入民间。" },
+        { y: "1492—1650 年", t: "新航路与大航海把天主教带进美洲、东南亚与菲律宾，成为跨洲宗教。" },
+        { y: "16 世纪", t: "宗教改革：路德、加尔文与英国国教兴起，天主教与新教分立。" },
+        { y: "17—18 世纪", t: "新教传教组织成立（荷兰、英国），天主教传教团深入非洲与美洲腹地。" },
+        { y: "19 世纪", t: "福音派大复兴与海外传教运动并行，教会进入非洲内陆、华北与东南亚岛民社会。" },
+        { y: "20 世纪", t: "五旬节派在拉丁美洲、非洲、韩国与菲律宾迅速增长；东正教与天主教在东欧复兴。" }
+      ],
+      places: [
+        { name: "美国", en: "United States", country: "United States of America", lat: 39.8, lon: -98.6, followers: 80000, note: "新教各派并存，五旬节派与福音派影响深入政教与社会议题。" },
+        { name: "巴西", en: "Brazil", country: "Brazil", lat: -10.8, lon: -52.9, followers: 130000, note: "全球最大的天主教国家之一，同时拥有全球最大的五旬节派信众群体。" },
+        { name: "尼日利亚", en: "Nigeria", country: "Nigeria", lat: 9.1, lon: 7.7, followers: 90000, note: "非洲增长最快的基督教地区，福音派与五旬节派教会高度活跃。" },
+        { name: "菲律宾", en: "Philippines", country: "Philippines", lat: 12.9, lon: 121.8, followers: 86000, note: "亚洲最大的天主教国家，西班牙殖民时期的传教遗产至今鲜明。" },
+        { name: "墨西哥", en: "Mexico", country: "Mexico", lat: 23.6, lon: -102.5, followers: 110000, note: "天主教占主体，新教福音派近三十年增长迅速。" },
+        { name: "刚果（金）", en: "DR Congo", country: "Democratic Republic of the Congo", lat: -4.0, lon: 21.8, followers: 50000, note: "19 世纪传教运动的结果，非洲基督教人口占比最高的国家之一。" },
+        { name: "意大利", en: "Italy", country: "Italy", lat: 42.8, lon: 12.6, followers: 48000, note: "天主教国教传统至今深刻影响政治、教育与节庆生活。" },
+        { name: "德国", en: "Germany", country: "Germany", lat: 51.2, lon: 10.4, followers: 43000, note: "新教与天主教势均力敌，世俗化程度高，教会以社会服务维系影响。" },
+        { name: "俄罗斯", en: "Russia", country: "Russia", lat: 61.5, lon: 105.3, followers: 40000, note: "东正教主体，福音派五旬节派自 20 世纪 90 年代起迅速扩张。" },
+        { name: "英国", en: "United Kingdom", country: "United Kingdom", lat: 55.4, lon: -3.4, followers: 40000, note: "圣公会与各自由教会并存，海外传教运动的策源地。" },
+        { name: "法国", en: "France", country: "France", lat: 46.2, lon: 2.2, followers: 20000, note: "天主教传统与世俗化并存，会众多在阿尔及利亚与非洲裔社群中。" },
+        { name: "韩国", en: "South Korea", country: "South Korea", lat: 36.5, lon: 127.9, followers: 20000, note: "20 世纪基督教增长最快的东亚国家之一，新教占绝对多数。" },
+        { name: "中国", en: "China", country: "China", lat: 34.5, lon: 104.0, followers: 38000, note: "天主教、新教与东正教并存，官方登记与实际信众规模差距明显。" },
+        { name: "印度", en: "India", country: "India", lat: 22.5, lon: 79.0, followers: 28000, note: "主要为喀拉拉、东北邦与孟买的社群，另有达罗毗荼与东北部族群。" },
+        { name: "印度尼西亚", en: "Indonesia", country: "Indonesia", lat: -2.0, lon: 118.0, followers: 80000, note: "全国最大的宗教社群之一，新教教会遍布爪哇、苏门答腊、加里曼丹。" },
+        { name: "越南", en: "Vietnam", country: "Vietnam", lat: 21.0, lon: 105.8, followers: 7000, note: "天主教在殖民时期扎根，南方教会与北方教会传统差异明显。" },
+        { name: "南非", en: "South Africa", country: "South Africa", lat: -29.0, lon: 24.7, followers: 20000, note: "19—20 世纪传教教育与南非战争塑造了庞大的基督徒社群。" },
+        { name: "中国台湾", en: "Taiwan, China", country: "China", lat: 23.7, lon: 120.9, followers: 2500, note: "基督徒比例在华人社会中偏高，长老教会与校园福音运动影响明显。" },
+        { name: "中国香港", en: "Hong Kong, China", country: "China", lat: 22.32, lon: 114.17, followers: 1500, note: "新教与天主教并存，教会团体在医疗、教育与慈善中角色突出。" },
+        { name: "中国澳门", en: "Macao, China", country: "China", lat: 22.20, lon: 113.54, followers: 35, note: "天主教在本地延续数百年，与华洋各宗教社群长期共处。" },
+        { name: "日本", en: "Japan", country: "Japan", lat: 36.2, lon: 138.3, followers: 800, note: "16 世纪的「锁国」与近代政教分离，使基督教长期处于地下状态。" }
+      ],
+      note: "基督教人口主要来自 Pew Research Center 与各教会年鉴的自报与登记数据。中国等国的实际信众规模与登记数字差距较大。"
+    },
+
+    /* ==================== 伊斯兰教 ==================== */
+    isl: {
+      key: "isl",
+      title: "伊斯兰教分布",
+      en: "ISLAM",
+      unit: "千人",
+      intro: "伊斯兰教由穆罕默德于 7 世纪初创立于阿拉伯半岛，是世界上增长最快的宗教之一。它随阿拉伯帝国的扩张走向欧亚非三洲，又经贸易网络深入东南亚，并通过移民进入欧美。",
+      stats: [
+        { label: "全球信徒", value: "约 19.7 亿", sub: "约占世界人口四分之一" },
+        { label: "两大主流", value: "逊尼派 / 什叶派", sub: "另有苏菲、艾哈迈德等" },
+        { label: "发源地", value: "阿拉伯半岛 · 麦加", sub: "公元 7 世纪" }
+      ],
+      history: [
+        { y: "610 年", t: "穆罕默德在麦加开始传教，最初的追随者多为亲族与贫民。" },
+        { y: "622 年", t: "希吉拉迁往麦地那，伊斯兰历以此为元年；乌玛拉清真寺建立，社群制度成型。" },
+        { y: "632—661 年", t: "四大哈里时期，伊斯兰教统一阿拉伯半岛，信仰与政体合一。" },
+        { y: "661—750 年", t: "倭马亚王朝定都大马士革，领土扩及伊比利亚、中亚与印度河。" },
+        { y: "711 年", t: "倭马亚军渡过直布罗陀，伊斯兰进入安达卢斯，基督教西班牙的百年由此开始。" },
+        { y: "750—1258 年", t: "阿拔斯王朝以巴格达为中心，学术、翻译与商业网络空前繁荣。" },
+        { y: "9—11 世纪", t: "北非、埃及与苏丹逐步伊斯兰化，伊斯兰进入中亚河中地区与波斯。" },
+        { y: "11—13 世纪", t: "塞尔柱突厥与花剌子模崛起，德里苏丹国建立；蒙古西征冲击伊斯兰世界。" },
+        { y: "14—15 世纪", t: "奥斯曼帝国向安纳托利亚与巴尔干扩张；1492 年格拉纳达陷落。" },
+        { y: "16 世纪", t: "伊斯兰随马来商人进入东南亚，摩鹿加、爪哇、苏门答腊形成群岛信仰。" },
+        { y: "17—19 世纪", t: "西非萨赫勒与印度洋沿岸伊斯兰化；殖民统治下伊斯兰复兴运动兴起。" },
+        { y: "20 世纪", t: "伊斯兰主义与民族主义交织，印尼、巴基斯坦、埃及的伊斯兰政党壮大；中亚与欧美 diaspora 增长。" }
+      ],
+      places: [
+        { name: "印度尼西亚", en: "Indonesia", country: "Indonesia", lat: -2.0, lon: 118.0, followers: 240000, note: "全球穆斯林人口最多的国家，信仰与国民身份高度统一。" },
+        { name: "巴基斯坦", en: "Pakistan", country: "Pakistan", lat: 30.4, lon: 69.3, followers: 240000, note: "伊斯兰建国，逊尼派为主体，清真寺与宗教学校网络密集。" },
+        { name: "印度", en: "India", country: "India", lat: 22.5, lon: 79.0, followers: 210000, note: "全球第三大穆斯林人口国家，喀拉拉、北方邦与孟买社区规模突出。" },
+        { name: "孟加拉国", en: "Bangladesh", country: "Bangladesh", lat: 23.7, lon: 90.4, followers: 150000, note: "穆斯林人口占比接近九成，乡村清真寺是社区中心。" },
+        { name: "埃及", en: "Egypt", country: "Egypt", lat: 26.8, lon: 30.8, followers: 105000, note: "伊斯兰为国教，科普特教会等少数族群与之长期共存。" },
+        { name: "土耳其", en: "Turkey", country: "Turkey", lat: 39.0, lon: 35.0, followers: 85000, note: "奥斯曼帝国的继承者，1923 年后世俗化改革与宗教复兴长期拉锯。" },
+        { name: "伊朗", en: "Iran", country: "Iran", lat: 32.4, lon: 53.7, followers: 87000, note: "什叶派最重要的国家，宗教与国家体制紧密结合。" },
+        { name: "阿尔及利亚", en: "Algeria", country: "Algeria", lat: 28.0, lon: 1.7, followers: 42000, note: "北非最大的穆斯林国家，20 世纪独立战争后宗教政治化加剧。" },
+        { name: "摩洛哥", en: "Morocco", country: "Morocco", lat: 31.8, lon: -7.1, followers: 37000, note: "最西部的穆斯林国家，逊尼派马格里布传统与苏菲教团并重。" },
+        { name: "沙特阿拉伯", en: "Saudi Arabia", country: "Saudi Arabia", lat: 23.9, lon: 45.1, followers: 35000, note: "伊斯兰教的发源地，瓦哈比—萨拉菲传统影响全球保守派伊斯兰。" },
+        { name: "苏丹", en: "Sudan", country: "Sudan", lat: 15.5, lon: 32.6, followers: 45000, note: "苏丹式伊斯兰自 19 世纪起深刻影响西非与中非。" },
+        { name: "伊拉克", en: "Iraq", country: "Iraq", lat: 33.2, lon: 43.7, followers: 40000, note: "什叶派圣城（卡尔巴拉、纳杰夫）与逊尼派地区并存。" },
+        { name: "阿富汗", en: "Afghanistan", country: "Afghanistan", lat: 33.9, lon: 67.7, followers: 40000, note: "普什图与塔吉克社群并存，1979 年后宗教政治影响极大。" },
+        { name: "马来西亚", en: "Malaysia", country: "Malaysia", lat: 4.2, lon: 102.0, followers: 33000, note: "伊斯兰为国教，四个州的宗教法体系适用于穆斯林社群。" },
+        { name: "乌兹别克斯坦", en: "Uzbekistan", country: "Uzbekistan", lat: 41.4, lon: 64.6, followers: 32000, note: "中亚穆斯林人口最多的国家，察合台—乌兹别克传统深厚。" },
+        { name: "也门", en: "Yemen", country: "Yemen", lat: 15.6, lon: 48.5, followers: 30000, note: "阿拉伯半岛南部的什叶派腹地，栽派与苏菲传统并行。" },
+        { name: "中国", en: "China", country: "China", lat: 37.5, lon: 100.0, followers: 26000, note: "回族、维吾尔族等人口约 2,600 万，宁夏与新疆的清真寺网络最密集。" },
+        { name: "叙利亚", en: "Syria", country: "Syria", lat: 34.8, lon: 39.0, followers: 24000, note: "逊尼派占多数，另有阿拉维派、德鲁兹等少数教派。" },
+        { name: "尼日利亚", en: "Nigeria", country: "Nigeria", lat: 9.1, lon: 7.7, followers: 25000, note: "非洲穆斯林人口最多的国家，北部诸州信众高度集中。" },
+        { name: "哈萨克斯坦", en: "Kazakhstan", country: "Kazakhstan", lat: 48.0, lon: 67.0, followers: 15000, note: "苏联时期宗教活动受压制，独立后清真寺与宗教学校迅速恢复。" },
+        { name: "美国", en: "United States", country: "United States of America", lat: 39.8, lon: -98.6, followers: 11000, note: "移民带来的穆斯林社群集中于中大西洋、德州与加州。" },
+        { name: "法国", en: "France", country: "France", lat: 46.2, lon: 2.2, followers: 5000, note: "北非与撒哈拉以南移民的后代构成最大的欧洲穆斯林社群之一。" }
+      ],
+      note: "伊斯兰教人口多用普查登记与估算推算，各国统计能力差异很大；「什叶派 / 逊尼派」在多数国家没有官方统计。"
+    }
   };
+
+  /* 兼容旧引用：道教专题等价于 FAITH_DIST.tao */
+  window.TAOISM = window.FAITH_DIST.tao;
 
   /* ---------- 地图线要素 ---------- */
   /* 中国南海海域断续线（十段线）：中国标准地图的一部分，随底图一起画出来 */
@@ -1280,10 +1448,10 @@
     "CIA World Factbook, Religion 字段（各国人口与宗教比例）",
     "World Religion Database (Brill), 各国宗教人口估算",
     "中国国务院新闻办公室《中国保障宗教信仰自由的政策和实践》白皮书",
-    "台湾地区内政部门宗教统计、香港与澳门政府统计（已并入中国口径）",
+    "中国台湾地区内政部门宗教统计、中国香港与中国澳门政府统计（已并入中国口径）",
     "各国人口普查与官方统计（印度、印尼、巴西、尼日利亚等）"
   ];
 
   /* 边界口径说明，展示在「数据说明与来源」里 */
-  window.BOUNDARY_NOTE = "地图疆界按中国官方标准地图绘制：台湾地区并入中国，中印东段（藏南地区）按中国主张线划归中国；国界以发布时为准。";
+  window.BOUNDARY_NOTE = "地图疆界按中国官方标准地图绘制：中国台湾地区并入中国，中印东段（藏南地区）按中国主张线划归中国；国界以发布时为准。";
 })();

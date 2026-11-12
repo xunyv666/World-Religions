@@ -1,6 +1,6 @@
 /* 世界宗教地图 · Service Worker（网络优先，离线回退） */
 /* 静态资源改动后请把 CACHE 版本号 +1，否则旧缓存会继续生效 */
-const CACHE = "world-religion-atlas-v5";
+const CACHE = "world-religion-atlas-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,6 +8,8 @@ const ASSETS = [
   "./manifest.webmanifest",
   "./assets/css/style.css",
   "./assets/js/data.js",
+  "./assets/js/spread.js",
+  "./assets/js/arrival.js",
   "./assets/js/world-geo.js",
   "./assets/js/map-engine.js",
   "./assets/js/app.js",

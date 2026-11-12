@@ -228,6 +228,26 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.92em;
 .layer-copy small{font-size:10.5px;color:var(--muted-2);margin-top:1px}
 .layer-check{width:16px;height:16px;border-radius:50%;border:1px solid var(--line-strong);color:transparent;font-size:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .layer-card.is-active .layer-check{background:var(--gold);border-color:var(--gold);color:#0c1017}
+.layer-icon.spread{color:var(--gold)}
+
+/* 信众密度：四个宗教的快捷切换 */
+.layer-sub{margin:-2px 0 10px;padding:2px 0 0}
+.layer-sub-title{
+  display:block;font-size:10px;letter-spacing:.14em;color:var(--muted-2);
+  text-transform:uppercase;margin:0 0 7px 2px;
+}
+.faith-chips{display:flex;flex-wrap:wrap;gap:5px}
+.faith-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 9px;border-radius:99px;
+  border:1px solid var(--line);background:rgba(255,255,255,.02);
+  font-size:11.5px;color:var(--muted);transition:all .18s;
+}
+.faith-chip .dot{width:7px;height:7px;border-radius:50%}
+.faith-chip:hover{border-color:var(--line-strong);color:var(--text);background:rgba(255,255,255,.05)}
+.faith-chip.is-active{
+  border-color:rgba(216,178,95,.45);background:rgba(216,178,95,.1);color:var(--text);
+}
 
 .region-list{display:flex;flex-direction:column;gap:1px;max-height:168px;overflow-y:auto}
 .region-list button{
@@ -307,7 +327,98 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.92em;
   background:rgba(10,15,22,.84);border:1px solid var(--line);
   backdrop-filter:blur(10px);font-size:10.5px;color:var(--muted);
 }
-.taoism-legend .grad{width:92px;height:7px;border-radius:99px;background:linear-gradient(90deg,#2a3038,#7a5c22,#d8b25f,#fff0bf)}
+/* ---------- 传播时间轴 ---------- */
+.timebar{
+  position:absolute;left:16px;right:16px;bottom:16px;z-index:12;
+  padding:12px 16px 13px;border-radius:14px;
+  background:linear-gradient(180deg,rgba(13,20,30,.94),rgba(8,13,20,.96));
+  border:1px solid var(--line-strong);
+  box-shadow:0 20px 50px -20px rgba(0,0,0,.85);
+  backdrop-filter:blur(16px);
+  animation:tb-in .3s cubic-bezier(.22,.9,.28,1);
+}
+@keyframes tb-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.tb-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.tb-faiths{display:flex;gap:5px;flex-wrap:wrap;flex:1;min-width:0}
+.tb-faith{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 11px;border-radius:99px;
+  border:1px solid var(--line);background:rgba(255,255,255,.03);
+  font-size:12px;color:var(--muted);transition:all .18s;
+}
+.tb-faith .dot{width:7px;height:7px;border-radius:50%}
+.tb-faith:hover{color:var(--text);border-color:var(--line-strong)}
+.tb-faith.is-active{color:var(--text);background:rgba(255,255,255,.09);border-color:rgba(216,178,95,.4)}
+.tb-year{
+  font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:600;
+  color:var(--gold-soft);white-space:nowrap;
+  padding:4px 10px;border-radius:8px;
+  background:rgba(216,178,95,.09);border:1px solid rgba(216,178,95,.22);
+}
+.tb-play{
+  width:34px;height:34px;border-radius:9px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(216,178,95,.14);border:1px solid rgba(216,178,95,.32);
+  color:var(--gold);transition:all .18s;
+}
+.tb-play:hover{background:rgba(216,178,95,.24)}
+.tb-play svg{width:17px;height:17px;fill:currentColor;stroke:none}
+.tb-close{
+  width:30px;height:30px;border-radius:8px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);
+}
+.tb-close:hover{color:var(--text);background:rgba(255,255,255,.09)}
+.tb-close svg{width:14px;height:14px}
+
+.tb-slider{position:relative;padding:0 2px}
+.tb-slider input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:20px;
+  background:transparent;cursor:pointer;display:block;margin:0;
+}
+.tb-slider input[type=range]::-webkit-slider-runnable-track{
+  height:4px;border-radius:99px;
+  background:linear-gradient(90deg,rgba(216,178,95,.55),rgba(216,178,95,.16));
+}
+.tb-slider input[type=range]::-moz-range-track{
+  height:4px;border-radius:99px;
+  background:linear-gradient(90deg,rgba(216,178,95,.55),rgba(216,178,95,.16));
+}
+.tb-slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:15px;height:15px;border-radius:50%;margin-top:-5.5px;
+  background:var(--gold);border:2px solid #0b0f14;
+  box-shadow:0 0 0 1px rgba(216,178,95,.5),0 2px 8px rgba(0,0,0,.6);
+}
+.tb-slider input[type=range]::-moz-range-thumb{
+  width:15px;height:15px;border-radius:50%;
+  background:var(--gold);border:2px solid #0b0f14;
+  box-shadow:0 0 0 1px rgba(216,178,95,.5);
+}
+.tb-ticks{position:relative;height:14px;margin-top:1px}
+.tb-tick{
+  position:absolute;transform:translateX(-50%);
+  font-size:9px;color:var(--muted-2);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.tb-tick::before{
+  content:"";position:absolute;left:50%;top:-4px;width:1px;height:3px;
+  background:rgba(216,178,95,.3);
+}
+.tb-info{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.tb-phase{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tb-phase strong{font-family:var(--serif);font-size:13px;font-weight:600;color:var(--gold-soft)}
+.tb-phase span{font-size:10.5px;color:var(--muted-2)}
+.tb-event{font-size:11.5px;line-height:1.65;color:var(--muted)}
+.tb-event b{color:var(--gold-soft);font-variant-numeric:tabular-nums;margin-right:4px}
+.tb-next{color:var(--muted-2);font-size:10.5px}
+
+/* 时间轴打开时，把底部的小控件挪开，别被压住 */
+body.spread-open .taoism-legend{display:none}
+body.spread-open .map-tools{bottom:152px}
+@media (max-width:980px){
+  body.spread-open .map-tools{bottom:196px}
+}
 .taoism-legend .low,.taoism-legend .high{font-size:9.5px;color:var(--muted-2)}
 
 .tooltip{
@@ -501,6 +612,12 @@ html.skip-intro .loading,html.skip-intro .welcome{display:none !important}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ---------- responsive ---------- */
+@media (min-width:981px){
+  /* 详情面板是浮在地图上的：打开时把地图让出来，
+     否则东亚、中东这些信众密集区会被面板整块盖住。 */
+  body.detail-open .stage{margin-right:420px}
+}
+
 @media (max-width:1180px){
   .brand-text small{display:none}
   .search{max-width:240px}
@@ -533,7 +650,7 @@ html.skip-intro .loading,html.skip-intro .welcome{display:none !important}
   body.drawer-open .drawer-scrim{opacity:1;visibility:visible}
   .sidebar-head{margin-bottom:10px}
 
-  .detail{width:100%;top:auto;height:86dvh;border-left:0;border-top:1px solid var(--line-strong);
+  .detail{width:100%;top:auto;height:78dvh;border-left:0;border-top:1px solid var(--line-strong);
     border-radius:18px 18px 0 0;transform:translateY(102%);box-shadow:0 -30px 70px -30px rgba(0,0,0,.9)}
   .detail.is-open{transform:translateY(0)}
   .detail::before{
@@ -546,6 +663,12 @@ html.skip-intro .loading,html.skip-intro .welcome{display:none !important}
   .map-tools{right:12px;bottom:14px}
   .taoism-legend{left:12px;bottom:14px;font-size:10px}
   .taoism-legend .grad{width:60px}
+  .timebar{left:10px;right:10px;bottom:10px;padding:10px 12px 11px;border-radius:12px}
+  .tb-top{gap:7px;margin-bottom:7px;flex-wrap:wrap}
+  .tb-faith{padding:4px 9px;font-size:11px}
+  .tb-year{font-size:11.5px;padding:3px 8px}
+  .tb-play{width:30px;height:30px}
+  .tb-event{font-size:11px;max-height:3.4em;overflow:hidden}
   .welcome-inner{max-width:340px}
   .welcome p{font-size:12px}
   .modal-card{padding:22px 18px 24px}

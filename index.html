@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>世界宗教地图 · World Religion Atlas</title>
-<meta name="description" content="可缩放的世界宗教分布地图，支持平面与 3D 地球，点击国家查看宗教构成与历史，并附道教全球分布专题。">
+<meta name="description" content="可缩放的世界宗教分布地图，支持平面与 3D 地球，点击国家查看宗教构成与历史，并附佛教、基督教、伊斯兰教、道教四个信众分布专题与全球传播时间轴。">
 <meta name="theme-color" content="#0B0F14">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./assets/icons/icon.svg" type="image/svg+xml">
@@ -55,7 +55,7 @@
 
     <button class="tao-btn" id="taoismBtn" type="button">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 1 0 18 4.5 4.5 0 0 1 0-9 4.5 4.5 0 0 0 0-9Z"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="12" cy="16.5" r="1.2"/></svg>
-      <span>道教分布</span>
+      <span>信众分布</span>
     </button>
 
     <button class="icon-btn only-mobile" id="infoBtnMobile" aria-label="数据说明">
@@ -89,11 +89,15 @@
           <span class="layer-copy"><strong>主导宗教</strong><small>按信众比例着色</small></span>
           <span class="layer-check">✓</span>
         </button>
-        <button class="layer-card" id="layerTaoism" type="button">
-          <span class="layer-icon tao">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 1 0 18 4.5 4.5 0 0 1 0-9 4.5 4.5 0 0 0 0-9Z"/><circle cx="12" cy="7.5" r="1.1"/><circle cx="12" cy="16.5" r="1.1"/></svg>
+        <div class="layer-sub" id="layerDensityGroup">
+          <span class="layer-sub-title">信众密度</span>
+          <div class="faith-chips" id="densityChips"></div>
+        </div>
+        <button class="layer-card" id="spreadBtn" type="button">
+          <span class="layer-icon spread">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg>
           </span>
-          <span class="layer-copy"><strong>道教信众</strong><small>全球道教分布热度</small></span>
+          <span class="layer-copy"><strong>传播时间轴</strong><small>拖动时间看全球扩散</small></span>
           <span class="layer-check">✓</span>
         </button>
       </div>
@@ -142,9 +146,32 @@
       </div>
 
       <div class="taoism-legend" id="taoismLegend" hidden>
-        <span>道教信众密度</span>
-        <i class="grad"></i>
+        <span>信众密度</span>
+        <i class="grad" id="densityGrad"></i>
         <span class="low">低</span><span class="high">高</span>
+      </div>
+
+      <!-- 传播时间轴：拖动滑杆，地图按年份推进 -->
+      <div class="timebar" id="timeBar" hidden>
+        <div class="tb-top">
+          <div class="tb-faiths" id="tbFaiths"></div>
+          <div class="tb-year"><span id="tbYear">公元 1 年</span></div>
+          <button class="tb-play" id="tbPlay" type="button" aria-label="播放传播动画">
+            <svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5 19 12 7 19.5V4.5Z"/></svg>
+            <svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M8 4.5h3.2v15H8zM12.8 4.5H16v15h-3.2z"/></svg>
+          </button>
+          <button class="tb-close" id="tbClose" type="button" aria-label="关闭时间轴">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div class="tb-slider">
+          <input type="range" id="tbRange" min="-530" max="2025" step="1" value="-530" aria-label="年份">
+          <div class="tb-ticks" id="tbTicks"></div>
+        </div>
+        <div class="tb-info">
+          <div class="tb-phase" id="tbPhase"></div>
+          <div class="tb-event" id="tbEvent"></div>
+        </div>
       </div>
 
       <div class="tooltip" id="tooltip" hidden>
@@ -156,7 +183,7 @@
         <div class="welcome-inner">
           <span class="welcome-eyebrow">探索 · EXPLORE</span>
           <h2>信仰如何塑造世界</h2>
-          <p>一张可以缩放到细节的宗教地图。点击任意国家，查看宗教构成与历史脉络；切换到「道教分布」，追踪一个本土宗教走向世界的路径。</p>
+          <p>一张可以缩放到细节的宗教地图。点击任意国家，查看宗教构成与历史脉络；打开「传播时间轴」，拖动滑杆，看佛教、基督教、伊斯兰教与道教如何一步步点亮全世界。</p>
           <button class="primary-btn" id="welcomeStart" type="button">开始探索</button>
         </div>
       </div>
@@ -190,6 +217,8 @@
 
 <script src="./assets/js/world-geo.js"></script>
 <script src="./assets/js/data.js"></script>
+<script src="./assets/js/spread.js"></script>
+<script src="./assets/js/arrival.js"></script>
 <script src="./assets/js/map-engine.js"></script>
 <script src="./assets/js/app.js"></script>
 </body>
